@@ -1,7 +1,6 @@
 //! day4 advent 2022
 use color_eyre::eyre::Result;
-use slab_tree::tree::TreeBuilder;
-use std::collections::HashMap;
+use md5;
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
@@ -12,7 +11,17 @@ fn main() -> Result<()> {
     let file = File::open(filename)?;
     let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
 
-    for (line_num, line) in lines.iter().enumerate() {
+    for line in &lines {
+        for i in 1.. {
+            let digest = md5::compute(format!("{line}{i}"));
+            match format!("{:x}", digest).as_bytes() {
+                [b'0', b'0', b'0', b'0', b'0', ..] => {
+                    println!("Found at {i}");
+                    break;
+                }
+                _ => {}
+            }
+        }
     }
 
     Ok(())
