@@ -14,22 +14,28 @@ fn main() -> Result<()> {
     let file = File::open(filename)?;
     let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
 
+    const DELIVERERS: usize = 2;
     for (line_num, line) in lines.iter().enumerate() {
-        let mut cur = Location(0, 0);
-        let mut hm = HashSet::from([cur.clone()]);
+        let mut cur = Vec::new();
+        let mut hm = HashSet::new();
+        for _ in 0..DELIVERERS {
+            cur.push(Location(0, 0));
+            hm.insert(Location(0, 0));
+        }
         for (pos, e) in line.bytes().enumerate() {
+            let ind = pos % DELIVERERS;
             match e {
                 b'>' => {
-                    cur = Location(cur.0 + 1, cur.1);
+                    cur[ind] = Location(cur[ind].0 + 1, cur[ind].1);
                 }
                 b'^' => {
-                    cur = Location(cur.0, cur.1 + 1);
+                    cur[ind] = Location(cur[ind].0, cur[ind].1 + 1);
                 }
                 b'v' => {
-                    cur = Location(cur.0, cur.1 - 1);
+                    cur[ind] = Location(cur[ind].0, cur[ind].1 - 1);
                 }
                 b'<' => {
-                    cur = Location(cur.0 - 1, cur.1);
+                    cur[ind] = Location(cur[ind].0 - 1, cur[ind].1);
                 }
                 _ => {
                     panic!(
@@ -39,7 +45,7 @@ fn main() -> Result<()> {
                     );
                 }
             }
-            hm.insert(cur.clone());
+            hm.insert(cur[ind].clone());
         }
         println!("Visited {} houses", hm.len());
     }
