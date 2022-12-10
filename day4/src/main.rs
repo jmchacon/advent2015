@@ -15,9 +15,12 @@ fn main() -> Result<()> {
         for i in 1.. {
             let digest = md5::compute(format!("{line}{i}"));
             match format!("{:x}", digest).as_bytes() {
-                [b'0', b'0', b'0', b'0', b'0', ..] => {
-                    println!("Found at {i}");
+                [b'0', b'0', b'0', b'0', b'0', b'0', ..] => {
+                    println!("Found 6 at {i} - {line}");
                     break;
+                }
+                [b'0', b'0', b'0', b'0', b'0', ..] => {
+                    println!("Found 5 at {i} - {line}");
                 }
                 _ => {}
             }
