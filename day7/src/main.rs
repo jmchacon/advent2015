@@ -135,22 +135,41 @@ fn main() -> Result<()> {
             }
         }
     }
-    println!("hm:\n{:?}", hm);
-    println!("vals:\n{:?}", vals);
+    println!("hm:");
+    let mut keys: Vec<&String> = hm.keys().collect();
+    keys.sort();
+    for k in keys {
+        println!("{k} - {:?}", hm[k]);
+    }
+    println!("vals:");
+    let mut keys: Vec<&String> = vals.keys().collect();
+    keys.sort();
+    for k in keys {
+        println!("{k} - {}", vals[k]);
+    }
 
+    let hm2 = hm.clone();
+    let mut vals2 = vals.clone();
+
+    let mut iter = 0;
     loop {
         if vals.contains_key("a") {
-            println!("found a");
-            break;
+            let val = vals.get(&String::from("a")).unwrap();
+            println!("found a - {val}");
+            vals2.insert(String::from("b"), *val);
+            iter += 1;
+            if iter >= 2 {
+                break;
+            }
+            hm = hm2.clone();
+            vals = vals2.clone();
         }
         let mut skipped = false;
         let mut keys: Vec<String> = vals.keys().map(|k| k.clone()).collect();
         keys.sort();
         for k in &keys {
-            println!("Processing {k} - hm {} - vals {}", hm.len(), vals.len());
             if !hm.contains_key(k) {
                 skipped = true;
-                println!("skipping for now");
                 continue;
             }
 
@@ -192,11 +211,6 @@ fn main() -> Result<()> {
         if !skipped {
             break;
         }
-    }
-    let mut keys: Vec<&String> = vals.keys().collect();
-    keys.sort();
-    for k in keys {
-        println!("{k} - {}", vals[k]);
     }
 
     Ok(())
