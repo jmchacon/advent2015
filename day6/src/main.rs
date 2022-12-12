@@ -1,8 +1,7 @@
 //! day6 advent 2022
 use clap::Parser;
 use color_eyre::eyre::Result;
-use slab_tree::tree::TreeBuilder;
-use std::collections::HashMap;
+use std::collections::HashSet;
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
@@ -13,6 +12,21 @@ use std::path::Path;
 struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
+
+    #[arg(long, default_value_t = 1000)]
+    width: usize,
+
+    #[arg(long, default_value_t = 1000)]
+    height: usize,
+}
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+struct Location(usize, usize);
+
+enum State {
+    On,
+    Off,
+    Toggle,
 }
 
 fn main() -> Result<()> {
@@ -23,7 +37,71 @@ fn main() -> Result<()> {
     let file = File::open(filename)?;
     let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
 
-    for (line_num, line) in lines.iter().enumerate() {}
+    let mut hm = HashSet::new();
 
+    for (line_num, line) in lines.iter().enumerate() {
+        let parts: Vec<&str> = line.split_whitespace().collect();
+        assert!(
+            parts.len() == 4 || parts.len() == 5,
+            "{} - bad line {line}",
+            line_num + 1
+        );
+
+        let mut state = State::Off;
+        let (parse1, parse2);
+        match (parts[0], parts[1], parts[2], parts[3]) {
+            ("turn", "on" | "off", _, "through") => {
+                assert!(parts.len() == 5, "{} - bad line {line}", line_num + 1);
+                if parts[1] == "on" {
+                    state = State::On;
+                }
+                parse1 = parts[2];
+                parse2 = parts[4];
+            }
+            ("toggle", _, "through", _) => {
+                assert!(parts.len() == 4, "{} - bad line {line}", line_num + 1);
+                state = State::Toggle;
+                parse1 = parts[1];
+                parse2 = parts[3];
+            }
+            _ => {
+                panic!("{} - bad line {line}", line_num + 1);
+            }
+        }
+        let (x1, x2, y1, y2);
+        let xs: Vec<&str> = parse1.split(",").collect();
+        let ys: Vec<&str> = parse2.split(",").collect();
+        assert!(
+            xs.len() == 2 && ys.len() == 2,
+            "{} - bad line {line}",
+            line_num + 1
+        );
+
+        x1 = usize::from_str_radix(xs[0], 10).unwrap();
+        y1 = usize::from_str_radix(xs[1], 10).unwrap();
+        x2 = usize::from_str_radix(ys[0], 10).unwrap();
+        y2 = usize::from_str_radix(ys[1], 10).unwrap();
+        println!("{x1},{x2} -> {y1},{y2}");
+        for x in x1..=x2 {
+            for y in y1..=y2 {
+                match state {
+                    State::On => {
+                        hm.insert(Location(x, y));
+                    }
+                    State::Off => {
+                        hm.remove(&Location(x, y));
+                    }
+                    State::Toggle => {
+                        if hm.contains(&Location(x, y)) {
+                            hm.remove(&Location(x, y));
+                        } else {
+                            hm.insert(Location(x, y));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    println!("lit - {}", hm.len());
     Ok(())
 }
