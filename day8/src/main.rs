@@ -1,12 +1,11 @@
 //! day8 advent 2022
 use clap::Parser;
 use color_eyre::eyre::Result;
-use slab_tree::tree::TreeBuilder;
-use std::collections::HashMap;
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
 use std::path::Path;
+use std::str;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -23,7 +22,62 @@ fn main() -> Result<()> {
     let file = File::open(filename)?;
     let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
 
-    for (line_num, line) in lines.iter().enumerate() {}
+    let mut code = 0;
+    let mut chars = 0;
+    for (line_num, line) in lines.iter().enumerate() {
+        let mut local_chars = 0;
+        let mut local_code = 0;
+        assert!(line.len() >= 2, "{} - bad line {line}", line_num + 1);
+        let raw = line.as_bytes();
+        let last = raw.len() - 1;
+        assert!(
+            raw[0] == b'"' && raw[last] == b'"',
+            "{} - bad line {line}",
+            line_num + 1
+        );
 
+        local_code += raw.len();
+        let mut pos = 1;
+        loop {
+            if pos >= last {
+                break;
+            }
+            match raw[pos] {
+                b'\\' => {
+                    pos += 1;
+                    assert!(pos < last, "{} - bad line {line}", line_num + 1);
+                    match raw[pos] {
+                        b'\\' | b'"' => {
+                            local_chars += 1;
+                            pos += 1;
+                        }
+                        b'x' => {
+                            pos += 1;
+                            // Need 2 chars here
+                            assert!(pos < last - 1, "{} - bad line {line}", line_num + 1);
+                            let _ =
+                                u8::from_str_radix(str::from_utf8(&raw[pos..pos + 2]).unwrap(), 16)
+                                    .unwrap();
+                            pos += 2;
+                            local_chars += 1;
+                        }
+                        _ => {
+                            panic!("{} - bad line {line}", line_num + 1);
+                        }
+                    }
+                }
+                _ => {
+                    local_chars += 1;
+                    pos += 1;
+                }
+            };
+        }
+        println!("{line} - {local_code} {local_chars}");
+        code += local_code;
+        chars += local_chars;
+    }
+    println!("code - {code}");
+    println!("chars - {chars}");
+    println!("diff - {}", code - chars);
     Ok(())
 }
