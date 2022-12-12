@@ -1,7 +1,7 @@
 //! day6 advent 2022
 use clap::Parser;
 use color_eyre::eyre::Result;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
@@ -37,7 +37,8 @@ fn main() -> Result<()> {
     let file = File::open(filename)?;
     let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
 
-    let mut hm = HashSet::new();
+    let mut hs = HashSet::new();
+    let mut hm = HashMap::new();
 
     for (line_num, line) in lines.iter().enumerate() {
         let parts: Vec<&str> = line.split_whitespace().collect();
@@ -86,22 +87,40 @@ fn main() -> Result<()> {
             for y in y1..=y2 {
                 match state {
                     State::On => {
-                        hm.insert(Location(x, y));
+                        hs.insert(Location(x, y));
+                        hm.entry(Location(x, y))
+                            .and_modify(|v| *v += 1)
+                            .or_insert(1);
                     }
                     State::Off => {
-                        hm.remove(&Location(x, y));
+                        hs.remove(&Location(x, y));
+                        if hm.contains_key(&Location(x, y)) {
+                            hm.entry(Location(x, y)).and_modify(|v| {
+                                if *v > 0 {
+                                    *v -= 1;
+                                }
+                            });
+
+                            if *hm.get(&Location(x, y)).unwrap() == 0 {
+                                hm.remove(&Location(x, y));
+                            }
+                        }
                     }
                     State::Toggle => {
-                        if hm.contains(&Location(x, y)) {
-                            hm.remove(&Location(x, y));
+                        if hs.contains(&Location(x, y)) {
+                            hs.remove(&Location(x, y));
                         } else {
-                            hm.insert(Location(x, y));
+                            hs.insert(Location(x, y));
                         }
+                        hm.entry(Location(x, y))
+                            .and_modify(|v| *v += 2)
+                            .or_insert(2);
                     }
                 }
             }
         }
     }
-    println!("lit - {}", hm.len());
+    println!("lit - {}", hs.len());
+    println!("brightness - {}", hm.values().sum::<usize>());
     Ok(())
 }
