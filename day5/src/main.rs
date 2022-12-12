@@ -23,15 +23,25 @@ fn main() -> Result<()> {
     let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
 
     let mut nice = 0;
+    let mut nice2 = 0;
     for line in &lines {
         let mut vowels = HashMap::new();
+        let mut pairs = HashMap::new();
         let mut twice = false;
         let mut prev = b'-';
+        let mut prev2 = b'-';
         let mut naughty = false;
+        let mut pair_with_space = false;
 
         for c in line.as_str().as_bytes() {
             if *c == prev {
                 twice = true;
+            }
+            if *c == prev2 {
+                pair_with_space = true;
+            }
+            if [prev, *c] != [prev2, prev] {
+                pairs.entry([prev, *c]).and_modify(|v| *v += 1).or_insert(1);
             }
             match c {
                 b'a' | b'e' | b'i' | b'o' | b'u' => {
@@ -59,6 +69,7 @@ fn main() -> Result<()> {
                 }
                 _ => {}
             }
+            prev2 = prev;
             prev = *c;
         }
 
@@ -68,7 +79,13 @@ fn main() -> Result<()> {
                 println!("{line} is nice");
             }
         }
+        println!("pairs for {line}: {pairs:?}");
+        if pairs.iter().any(|(_, v)| *v >= 2) && pair_with_space {
+            nice2 += 1;
+            println!("{line} is nice2");
+        }
     }
     println!("total nice = {nice}");
+    println!("total nice2 = {nice2}");
     Ok(())
 }
