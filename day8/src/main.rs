@@ -24,9 +24,11 @@ fn main() -> Result<()> {
 
     let mut code = 0;
     let mut chars = 0;
+    let mut encoded_code = 0;
     for (line_num, line) in lines.iter().enumerate() {
         let mut local_chars = 0;
         let mut local_code = 0;
+        let mut local_encoded_code = 0;
         assert!(line.len() >= 2, "{} - bad line {line}", line_num + 1);
         let raw = line.as_bytes();
         let last = raw.len() - 1;
@@ -37,6 +39,7 @@ fn main() -> Result<()> {
         );
 
         local_code += raw.len();
+        local_encoded_code += raw.len() + 4; // Have to escape first and last " to "\"
         let mut pos = 1;
         loop {
             if pos >= last {
@@ -45,10 +48,12 @@ fn main() -> Result<()> {
             match raw[pos] {
                 b'\\' => {
                     pos += 1;
+                    local_encoded_code += 1;
                     assert!(pos < last, "{} - bad line {line}", line_num + 1);
                     match raw[pos] {
                         b'\\' | b'"' => {
                             local_chars += 1;
+                            local_encoded_code += 1;
                             pos += 1;
                         }
                         b'x' => {
@@ -72,12 +77,15 @@ fn main() -> Result<()> {
                 }
             };
         }
-        println!("{line} - {local_code} {local_chars}");
+        println!("{line} - {local_code} {local_chars} {local_encoded_code}");
         code += local_code;
         chars += local_chars;
+        encoded_code += local_encoded_code;
     }
     println!("code - {code}");
     println!("chars - {chars}");
     println!("diff - {}", code - chars);
+    println!("encoded_code - {}", encoded_code);
+    println!("diff2 - {}", encoded_code - code);
     Ok(())
 }
