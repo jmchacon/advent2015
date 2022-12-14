@@ -40,6 +40,7 @@ fn main() -> Result<()> {
         let x = str::from_utf8(&cc).unwrap();
         new += &format!("{repeat}{x}");
         //println!("{i} - {cur} -> {new}");
+        println!("{i}");
         cur = new;
     }
     println!("len {}", cur.len());
