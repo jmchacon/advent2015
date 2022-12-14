@@ -55,5 +55,6 @@ fn main() -> Result<()> {
         println!("{p:?} - {tot}");
     }
     println!("min: {}", res.iter().min().unwrap());
+    println!("max: {}", res.iter().max().unwrap());
     Ok(())
 }
