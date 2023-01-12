@@ -22,35 +22,43 @@ fn main() -> Result<()> {
     let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
 
     let mut num = 0;
+    let mut num2 = 0;
     for (line_num, line) in lines.iter().enumerate() {
         let Ok(v) = serde_json::from_str::<Value>(&line) else {
             panic!("{} - bad line {line}", line_num+1);
         };
 
-        num += total(&v);
+        num += total(&v, false);
+        num2 += total(&v, true);
         println!("{v}");
     }
     println!("{num}");
+    println!("{num2}");
     Ok(())
 }
 
-fn total(v: &Value) -> i64 {
+fn total(v: &Value, ignore_red: bool) -> i64 {
     match v {
         Value::Null => 0,
         Value::Bool(_) => 0,
         Value::Number(v) => v.as_i64().unwrap(),
         Value::String(_) => 0,
-        Value::Array(v) => {
+        Value::Array(vals) => {
             let mut num = 0;
-            for val in v {
-                num += total(val);
+            for v in vals {
+                num += total(v, ignore_red);
             }
             num
         }
         Value::Object(m) => {
             let mut num = 0;
             for (_, v) in m {
-                num += total(v)
+                if let Value::String(s) = v {
+                    if ignore_red && s == "red" {
+                        return 0;
+                    }
+                }
+                num += total(v, ignore_red)
             }
             num
         }
