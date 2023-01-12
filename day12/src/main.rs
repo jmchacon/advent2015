@@ -51,13 +51,23 @@ fn total(v: &Value, ignore_red: bool) -> i64 {
             num
         }
         Value::Object(m) => {
+            if ignore_red
+                && m.iter()
+                    .filter(|(_, v)| {
+                        if let Value::String(s) = v {
+                            if s == "red" {
+                                return true;
+                            }
+                        }
+                        false
+                    })
+                    .count()
+                    != 0
+            {
+                return 0;
+            };
             let mut num = 0;
             for (_, v) in m {
-                if let Value::String(s) = v {
-                    if ignore_red && s == "red" {
-                        return 0;
-                    }
-                }
                 num += total(v, ignore_red)
             }
             num
