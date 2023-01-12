@@ -1,29 +1,93 @@
 //! day11 advent 2022
+use std::collections::HashMap;
+
 use clap::Parser;
 use color_eyre::eyre::Result;
-use slab_tree::tree::TreeBuilder;
-use std::collections::HashMap;
-use std::fs::File;
-use std::io;
-use std::io::BufRead;
-use std::path::Path;
 
 #[derive(Parser)]
 #[command(author, version, about)]
 struct Args {
-    #[arg(long, default_value_t = String::from("input.txt"))]
-    filename: String,
+    #[arg(long, default_value_t = String::from("cqjxjnds"))]
+    input: String,
+
+    #[arg(long, default_value_t = usize::MAX)]
+    iterations: usize,
+
+    #[arg(long, default_value_t = false)]
+    debug: bool,
 }
 
 fn main() -> Result<()> {
     color_eyre::install()?;
     let args: Args = Args::parse();
 
-    let filename = Path::new(env!("CARGO_MANIFEST_DIR")).join(args.filename);
-    let file = File::open(filename)?;
-    let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
+    let mut p = args.input.clone();
 
-    for (line_num, line) in lines.iter().enumerate() {}
+    let mut pass = unsafe { p.as_bytes_mut() };
 
+    println!("{}", args.input);
+    for i in 0..args.iterations {
+        increment(&mut pass);
+        if args.debug {
+            // SAFETY: We know this is valid utf8 ascii so increment will
+            //         still leave it in a state we can blind convert.
+            unsafe {
+                println!("{}", std::str::from_utf8(pass).unwrap_unchecked());
+            }
+        }
+        if test1(pass) && test2(pass) && test3(pass) {
+            // SAFETY: We know this is valid utf8 ascii so increment will
+            //         still leave it in a state we can blind convert.
+            unsafe {
+                println!("{}", std::str::from_utf8(pass).unwrap_unchecked());
+            }
+            println!("Found in {i} iterations");
+            break;
+        }
+    }
     Ok(())
+}
+
+fn increment(pass: &mut [u8]) {
+    for i in (0..pass.len()).rev() {
+        pass[i] += 1;
+        if pass[i] > b'z' {
+            pass[i] = b'a';
+        } else {
+            break;
+        }
+    }
+}
+
+// Passwords must include one increasing straight of at least three letters,
+// like abc, bcd, cde, and so on, up to xyz. They cannot skip letters; abd doesn't count.
+fn test1(pass: &[u8]) -> bool {
+    for i in 0..pass.len() - 2 {
+        // i.e. abc if a+1 == b and b+1 == c
+        if pass[i] + 1 == pass[i + 1] && pass[i + 1] + 1 == pass[i + 2] {
+            return true;
+        }
+    }
+    false
+}
+
+// Passwords may not contain the letters i, o, or l, as these letters can be
+// mistaken for other characters and are therefore confusing.
+fn test2(pass: &[u8]) -> bool {
+    pass.iter()
+        .cloned()
+        .filter(|x| *x != b'i' && *x != b'o' && *x != b'l')
+        .count()
+        == pass.len()
+}
+
+// Passwords must contain at least two different, non-overlapping pairs of letters, like aa, bb, or zz.
+fn test3(pass: &[u8]) -> bool {
+    let mut idxs = HashMap::new();
+    for i in 0..pass.len() - 1 {
+        if pass[i] == pass[i + 1] {
+            idxs.insert(pass[i], i);
+        }
+    }
+    idxs.len() >= 2
 }
