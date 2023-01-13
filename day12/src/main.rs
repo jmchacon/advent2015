@@ -43,34 +43,13 @@ fn total(v: &Value, ignore_red: bool) -> i64 {
         Value::Bool(_) => 0,
         Value::Number(v) => v.as_i64().unwrap(),
         Value::String(_) => 0,
-        Value::Array(vals) => {
-            let mut num = 0;
-            for v in vals {
-                num += total(v, ignore_red);
-            }
-            num
-        }
+        Value::Array(vals) => vals.iter().map(|x| total(x, ignore_red)).sum(),
         Value::Object(m) => {
-            if ignore_red
-                && m.iter()
-                    .filter(|(_, v)| {
-                        if let Value::String(s) = v {
-                            if s == "red" {
-                                return true;
-                            }
-                        }
-                        false
-                    })
-                    .count()
-                    != 0
-            {
-                return 0;
-            };
-            let mut num = 0;
-            for (_, v) in m {
-                num += total(v, ignore_red)
+            if ignore_red && m.values().any(|x| x == "red") {
+                0
+            } else {
+                m.values().map(|x| total(x, ignore_red)).sum()
             }
-            num
         }
     }
 }
