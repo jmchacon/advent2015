@@ -1,7 +1,7 @@
 //! day13 advent 2022
 use clap::Parser;
 use color_eyre::eyre::Result;
-use slab_tree::tree::TreeBuilder;
+use itertools::Itertools;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io;
@@ -13,6 +13,9 @@ use std::path::Path;
 struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
+
+    #[arg(long, default_value_t = false)]
+    debug: bool,
 }
 
 fn main() -> Result<()> {
@@ -23,7 +26,58 @@ fn main() -> Result<()> {
     let file = File::open(filename)?;
     let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
 
-    for (line_num, line) in lines.iter().enumerate() {}
+    let mut happy = HashMap::new();
+    for (line_num, line) in lines.iter().enumerate() {
+        let parts = line.split_whitespace().collect::<Vec<&str>>();
+        assert!(parts.len() == 11, "{} - bad line {line}", line_num + 1);
+        let mut happiness = i64::from_str_radix(parts[3], 10).unwrap();
+        if parts[2] == "lose" {
+            happiness *= -1;
+        } else {
+            assert!(parts[2] == "gain", "{} - bad line {line}", line_num + 1);
+        }
+        let sit = parts[10].trim_end_matches(".");
+        happy
+            .entry(parts[0])
+            .and_modify(|v: &mut HashMap<&str, i64>| {
+                v.insert(sit, happiness);
+            })
+            .or_insert(HashMap::from([(sit, happiness)]));
+    }
 
+    println!("Table size is {}", happy.len());
+    if args.debug {
+        for (person, v) in &happy {
+            for (sit, happy) in v {
+                println!("{person} -> {sit} - {happy}");
+            }
+        }
+    }
+
+    let mut max = i64::MIN;
+    for p in happy.keys().cloned().permutations(happy.len()) {
+        let new = compute_happiness(&happy, &p);
+        if args.debug {
+            println!("{p:?} - {new}");
+        }
+        if new > max {
+            max = new;
+        }
+    }
+    println!("max is {max}");
     Ok(())
+}
+
+fn compute_happiness(happy: &HashMap<&str, HashMap<&str, i64>>, table: &Vec<&str>) -> i64 {
+    let mut h = 0;
+    let last = table.len() - 1;
+    // Get all combos except last person->first person
+    // You have to get both the forward happiness and the reverse for each person.
+    for i in 0..last {
+        h += happy.get(table[i]).unwrap().get(table[i + 1]).unwrap();
+        h += happy.get(table[i + 1]).unwrap().get(table[i]).unwrap();
+    }
+    h += happy.get(table[last]).unwrap().get(table[0]).unwrap();
+    h += happy.get(table[0]).unwrap().get(table[last]).unwrap();
+    h
 }
