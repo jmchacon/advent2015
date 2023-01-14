@@ -45,9 +45,33 @@ fn main() -> Result<()> {
             .or_insert(HashMap::from([(sit, happiness)]));
     }
 
+    run_table(&happy, args.debug);
+
+    // Part2 is add self
+    let keys = happy.keys().cloned().collect::<Vec<_>>();
+    for k in keys {
+        happy
+            .entry("Self")
+            .and_modify(|v: &mut HashMap<&str, i64>| {
+                v.insert(k, 0);
+            })
+            .or_insert(HashMap::from([(k, 0)]));
+        happy
+            .entry(k)
+            .and_modify(|v: &mut HashMap<&str, i64>| {
+                v.insert("Self", 0);
+            })
+            .or_insert(HashMap::from([("Self", 0)]));
+    }
+
+    run_table(&happy, args.debug);
+    Ok(())
+}
+
+fn run_table(happy: &HashMap<&str, HashMap<&str, i64>>, debug: bool) {
     println!("Table size is {}", happy.len());
-    if args.debug {
-        for (person, v) in &happy {
+    if debug {
+        for (person, v) in happy {
             for (sit, happy) in v {
                 println!("{person} -> {sit} - {happy}");
             }
@@ -57,7 +81,7 @@ fn main() -> Result<()> {
     let mut max = i64::MIN;
     for p in happy.keys().cloned().permutations(happy.len()) {
         let new = compute_happiness(&happy, &p);
-        if args.debug {
+        if debug {
             println!("{p:?} - {new}");
         }
         if new > max {
@@ -65,7 +89,6 @@ fn main() -> Result<()> {
         }
     }
     println!("max is {max}");
-    Ok(())
 }
 
 fn compute_happiness(happy: &HashMap<&str, HashMap<&str, i64>>, table: &Vec<&str>) -> i64 {
