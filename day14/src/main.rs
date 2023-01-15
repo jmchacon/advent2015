@@ -48,20 +48,42 @@ fn main() -> Result<()> {
 
     let mut speeds = Vec::new();
     for (d, r) in &deer {
-        let cycles = args.race / (r.fly_time + r.rest);
-        let rem = args.race % (r.fly_time + r.rest);
-        let mut dist = r.fly_speed * r.fly_time * cycles;
-        if rem > r.fly_time {
-            dist += r.fly_speed * r.fly_time;
-        } else {
-            dist += r.fly_speed * rem;
-        }
-
-        speeds.push((dist, *d));
+        speeds.push((dist_time(r, args.race), *d));
     }
     speeds.sort();
     for s in &speeds {
         println!("{} flies {} in {} seconds", s.1, s.0, args.race);
     }
+
+    println!();
+
+    let mut scores = HashMap::new();
+    for time in 1..=args.race {
+        let mut speeds = Vec::new();
+        for (d, r) in &deer {
+            speeds.push((dist_time(r, time), *d));
+        }
+        speeds.sort();
+        let (_, winner) = speeds[speeds.len() - 1];
+        scores.entry(winner).and_modify(|x| *x += 1).or_insert(1);
+    }
+    // Now flip them so we can sort it.
+    let mut s = scores.iter().map(|(k, v)| (*v, *k)).collect::<Vec<_>>();
+    s.sort();
+    for (s, r) in &s {
+        println!("{r} has {s} score in {} seconds", args.race);
+    }
     Ok(())
+}
+
+fn dist_time(r: &Reindeer, time: u64) -> u64 {
+    let cycles = time / (r.fly_time + r.rest);
+    let rem = time % (r.fly_time + r.rest);
+    let mut dist = r.fly_speed * r.fly_time * cycles;
+    if rem > r.fly_time {
+        dist += r.fly_speed * r.fly_time;
+    } else {
+        dist += r.fly_speed * rem;
+    }
+    dist
 }
