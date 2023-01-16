@@ -1,8 +1,7 @@
 //! day17 advent 2022
 use clap::Parser;
 use color_eyre::eyre::Result;
-use slab_tree::tree::TreeBuilder;
-use std::collections::HashMap;
+use itertools::Itertools;
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
@@ -13,6 +12,9 @@ use std::path::Path;
 struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
+
+    #[arg(long, default_value_t = 150)]
+    fill: u64,
 }
 
 fn main() -> Result<()> {
@@ -23,7 +25,24 @@ fn main() -> Result<()> {
     let file = File::open(filename)?;
     let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
 
-    for (line_num, line) in lines.iter().enumerate() {}
+    let buckets = lines
+        .iter()
+        .map(|l| u64::from_str_radix(l, 10).unwrap())
+        .collect::<Vec<_>>();
 
+    let sum = (2..=buckets.len())
+        .map(|x| {
+            buckets
+                .iter()
+                .combinations(x)
+                .filter(|x| x.iter().cloned().sum::<u64>() == args.fill)
+                .count()
+        })
+        .sum::<usize>();
+    println!(
+        "{sum} combinations for {} buckets to fill to {}",
+        buckets.len(),
+        args.fill
+    );
     Ok(())
 }
