@@ -78,16 +78,13 @@ fn run_table(happy: &HashMap<&str, HashMap<&str, i64>>, debug: bool) {
         }
     }
 
-    let mut max = i64::MIN;
-    for p in happy.keys().cloned().permutations(happy.len()) {
-        let new = compute_happiness(&happy, &p);
-        if debug {
-            println!("{p:?} - {new}");
-        }
-        if new > max {
-            max = new;
-        }
-    }
+    let max = happy
+        .keys()
+        .cloned()
+        .permutations(happy.len())
+        .map(|v| compute_happiness(happy, &v))
+        .max()
+        .unwrap();
     println!("max is {max}");
 }
 
