@@ -126,5 +126,22 @@ fn main() -> Result<()> {
         .collect::<Vec<_>>();
     println!("Remaining: {rem:?}");
     println!("The Sue is {}", rem[0].0 + 1);
+
+    let rem = sues
+        .iter()
+        .enumerate()
+        .filter(|(_, s)| s.children == m.children || s.children == 0)
+        .filter(|(_, s)| s.cats > m.cats || s.cats == 0)
+        .filter(|(_, s)| s.samoyeds == m.samoyeds || s.samoyeds == 0)
+        .filter(|(_, s)| s.pomeranians < m.pomeranians || s.pomeranians == 0)
+        .filter(|(_, s)| s.akitas == m.akitas || s.akitas == 0)
+        .filter(|(_, s)| s.vizslas == m.vizslas || s.vizslas == 0)
+        .filter(|(_, s)| s.goldfish < m.goldfish || s.goldfish == 0)
+        .filter(|(_, s)| s.trees > m.trees || s.trees == 0)
+        .filter(|(_, s)| s.cars == m.cars || s.cars == 0)
+        .filter(|(_, s)| s.perfumes == m.perfumes || s.perfumes == 0)
+        .collect::<Vec<_>>();
+    println!("Remaining: {rem:?}");
+    println!("The Sue for part2  is {}", rem[0].0 + 1);
     Ok(())
 }
