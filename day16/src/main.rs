@@ -1,4 +1,6 @@
 //! day16 advent 2022
+#![feature(iter_order_by)]
+
 use clap::Parser;
 use color_eyre::eyre::Result;
 use std::fs::File;
@@ -110,38 +112,74 @@ fn main() -> Result<()> {
         perfumes: 1,
     };
 
-    let rem = sues
-        .iter()
-        .enumerate()
-        .filter(|(_, s)| s.children == m.children || s.children == 0)
-        .filter(|(_, s)| s.cats == m.cats || s.cats == 0)
-        .filter(|(_, s)| s.samoyeds == m.samoyeds || s.samoyeds == 0)
-        .filter(|(_, s)| s.pomeranians == m.pomeranians || s.pomeranians == 0)
-        .filter(|(_, s)| s.akitas == m.akitas || s.akitas == 0)
-        .filter(|(_, s)| s.vizslas == m.vizslas || s.vizslas == 0)
-        .filter(|(_, s)| s.goldfish == m.goldfish || s.goldfish == 0)
-        .filter(|(_, s)| s.trees == m.trees || s.trees == 0)
-        .filter(|(_, s)| s.cars == m.cars || s.cars == 0)
-        .filter(|(_, s)| s.perfumes == m.perfumes || s.perfumes == 0)
-        .collect::<Vec<_>>();
-    println!("Remaining: {rem:?}");
-    println!("The Sue is {}", rem[0].0 + 1);
-
-    let rem = sues
-        .iter()
-        .enumerate()
-        .filter(|(_, s)| s.children == m.children || s.children == 0)
-        .filter(|(_, s)| s.cats > m.cats || s.cats == 0)
-        .filter(|(_, s)| s.samoyeds == m.samoyeds || s.samoyeds == 0)
-        .filter(|(_, s)| s.pomeranians < m.pomeranians || s.pomeranians == 0)
-        .filter(|(_, s)| s.akitas == m.akitas || s.akitas == 0)
-        .filter(|(_, s)| s.vizslas == m.vizslas || s.vizslas == 0)
-        .filter(|(_, s)| s.goldfish < m.goldfish || s.goldfish == 0)
-        .filter(|(_, s)| s.trees > m.trees || s.trees == 0)
-        .filter(|(_, s)| s.cars == m.cars || s.cars == 0)
-        .filter(|(_, s)| s.perfumes == m.perfumes || s.perfumes == 0)
-        .collect::<Vec<_>>();
-    println!("Remaining: {rem:?}");
-    println!("The Sue for part2  is {}", rem[0].0 + 1);
+    println!("best sue: {}", best_sue(&sues, &m, true));
+    println!("best sue2: {}", best_sue(&sues, &m, false));
     Ok(())
+}
+
+fn best_sue(sues: &Vec<Sue>, m: &Sue, exact: bool) -> usize {
+    // Turn these into arrays so we can iterate to compare vs field compare.
+    let comp = [
+        m.children,
+        m.cats,
+        m.samoyeds,
+        m.pomeranians,
+        m.akitas,
+        m.vizslas,
+        m.goldfish,
+        m.trees,
+        m.cars,
+        m.perfumes,
+    ];
+    // Converts sues into arrays then enumerate each.
+    // For each one it's a candidate if it passes our tests.
+    // Tests may differ based on exact. If not exact cats/trees are > tests
+    // and pomeranians/goldfish are < tests.
+    // But because the tests are permissize and 0 == "ok" we may have N candidates
+    // so map over those to fold down to a "score". Best score wins.
+    sues.iter()
+        .map(|s| {
+            [
+                s.children,
+                s.cats,
+                s.samoyeds,
+                s.pomeranians,
+                s.akitas,
+                s.vizslas,
+                s.goldfish,
+                s.trees,
+                s.cars,
+                s.perfumes,
+            ]
+        })
+        .enumerate()
+        .filter(|(_, s)| {
+            comp.iter().eq_by(s.iter().enumerate(), |x, y| {
+                if exact || (y.0 != 1 && y.0 != 3 && y.0 != 6 && y.0 != 7) {
+                    *x == *y.1 || *y.1 == 0
+                } else {
+                    if y.0 == 1 || y.0 == 7 {
+                        *y.1 > *x || *y.1 == 0
+                    } else {
+                        *y.1 < *x || *y.1 == 0
+                    }
+                }
+            })
+        })
+        .map(|(i, s)| {
+            (
+                comp.iter().enumerate().fold(0, |acc, x| {
+                    // Don't score if we got here because it wasn't filled in.
+                    if x.0 != 0 && s[x.0] == *x.1 {
+                        acc + 1
+                    } else {
+                        acc
+                    }
+                }),
+                i + 1,
+            )
+        })
+        .max()
+        .unwrap()
+        .1
 }
