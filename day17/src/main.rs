@@ -2,6 +2,7 @@
 use clap::Parser;
 use color_eyre::eyre::Result;
 use itertools::Itertools;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
@@ -30,19 +31,24 @@ fn main() -> Result<()> {
         .map(|l| u64::from_str_radix(l, 10).unwrap())
         .collect::<Vec<_>>();
 
-    let sum = (2..=buckets.len())
-        .map(|x| {
-            buckets
-                .iter()
-                .combinations(x)
-                .filter(|x| x.iter().cloned().sum::<u64>() == args.fill)
-                .count()
-        })
-        .sum::<usize>();
+    let mut hm = HashMap::new();
+    (2..=buckets.len()).for_each(|x| {
+        let c = buckets
+            .iter()
+            .combinations(x)
+            .filter(|x| x.iter().cloned().sum::<u64>() == args.fill)
+            .count();
+        if c > 0 {
+            hm.entry(x).and_modify(|x| *x += c).or_insert(c);
+        }
+    });
+    let sum = hm.iter().map(|(_, v)| *v).sum::<usize>();
     println!(
         "{sum} combinations for {} buckets to fill to {}",
         buckets.len(),
         args.fill
     );
+    let min = hm.iter().min().unwrap();
+    println!("min is {} which has {} combos", min.0, min.1);
     Ok(())
 }
