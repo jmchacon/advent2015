@@ -48,11 +48,13 @@ fn main() -> Result<()> {
         }
     }
 
+    let mut orig_grid = grid.clone();
+
     print_board(&grid);
     println!();
 
     for _ in 0..args.rounds {
-        step(&mut grid);
+        step(&mut grid, false);
         if args.debug {
             print_board(&grid);
             println!();
@@ -61,29 +63,63 @@ fn main() -> Result<()> {
 
     let on = grid.into_iter().filter(|x| *x == Light::On).count();
     println!("{on} lights on after {} rounds", args.rounds);
+    if args.debug {
+        println!();
+    }
+    for _ in 0..args.rounds {
+        step(&mut orig_grid, true);
+        if args.debug {
+            print_board(&orig_grid);
+            println!();
+        }
+    }
+
+    let on = orig_grid.into_iter().filter(|x| *x == Light::On).count();
+    println!(
+        "{on} lights with stuck corners on after {} rounds",
+        args.rounds
+    );
     Ok(())
 }
 
-fn step(grid: &mut Grid<Light>) {
+fn step(grid: &mut Grid<Light>, corners: bool) {
     let mut newgrid = Grid::new(grid.width(), grid.height());
+    // If corners is true the 4 corners always remain on.
+    // So we set that now so references to them work and then below
+    // force the corners to remain.
+    if corners {
+        grid.add(&Location(0, 0), Light::On);
+        grid.add(&Location(grid.width() - 1, 0), Light::On);
+        grid.add(&Location(0, grid.height() - 1), Light::On);
+        grid.add(&Location(grid.width() - 1, grid.height() - 1), Light::On);
+    }
     for y in 0..grid.height() {
         for x in 0..grid.width() {
             let l = Location(x, y);
             let mut g = grid.get(&l).clone();
-            let n = grid
-                .neighbors_all(&l)
-                .iter()
-                .filter(|x| *x.1 == Light::On)
-                .count();
-            match g {
-                Light::On => {
-                    if n != 2 && n != 3 {
-                        g = Light::Off;
+            if corners
+                && (l == Location(0, 0)
+                    || l == Location(grid.width() - 1, 0)
+                    || l == Location(0, grid.height() - 1)
+                    || l == Location(grid.width() - 1, grid.height() - 1))
+            {
+                g = Light::On;
+            } else {
+                let n = grid
+                    .neighbors_all(&l)
+                    .iter()
+                    .filter(|x| *x.1 == Light::On)
+                    .count();
+                match g {
+                    Light::On => {
+                        if n != 2 && n != 3 {
+                            g = Light::Off;
+                        }
                     }
-                }
-                Light::Off => {
-                    if n == 3 {
-                        g = Light::On;
+                    Light::Off => {
+                        if n == 3 {
+                            g = Light::On;
+                        }
                     }
                 }
             }
