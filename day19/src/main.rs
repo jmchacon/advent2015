@@ -1,12 +1,13 @@
 //! day19 advent 2022
 use clap::Parser;
 use color_eyre::eyre::Result;
-//use std::cmp::Reverse;
+use rand::seq::SliceRandom;
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
 use std::path::Path;
+use std::time::Instant;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -36,10 +37,12 @@ fn main() -> Result<()> {
         }
         let parts = line.split_whitespace().collect::<Vec<_>>();
         assert!(parts.len() == 3, "{} - bad line {line}", line_num + 1);
-        transforms
-            .entry(parts[0])
-            .and_modify(|v: &mut Vec<&str>| v.push(parts[2]))
-            .or_insert(vec![parts[2]]);
+        // The input should have distinct right sides with N identical left.
+        // So invert and store into a hashmap. This is simpler than keying off
+        // the left and having to use a Vec of values.
+        if transforms.insert(parts[2], parts[0]) != None {
+            panic!("{} - bad line {line} - dup", line_num + 1);
+        }
     }
 
     println!("start: {goal}");
@@ -48,24 +51,21 @@ fn main() -> Result<()> {
     }
 
     let mut new = HashSet::new();
-    for k in transforms.keys() {
-        for trans in &transforms[k] {
-            if args.debug {
-                println!("Transforming {goal} {k} with {trans}");
-            }
-            new = new
-                .union(&do_transform(goal, k, trans, args.debug))
-                .cloned()
-                .collect();
+    for (v, k) in &transforms {
+        if args.debug {
+            println!("Transforming {goal} {k} with {v}");
         }
+        new = new
+            .union(&do_transform(goal, k, v, args.debug))
+            .cloned()
+            .collect();
     }
     println!("Count is {} for {goal}", new.len());
 
     println!();
-    // Part2 - implement Dijkstra's algorithm to find the least number of
-    //         transforms to hit the goal.
-    //let steps = bfs(goal, "e", &transforms, args.debug);
-    //let steps = dfs_astar(goal, "e", &transforms, 0);
+    // Someone did an analysis of the input and since it's XRn..Ar sequences
+    // and Y sequences and everything else is single chars you can reduce
+    // this to a calculation.
     let ar = goal.matches("Ar").count();
     let rn = goal.matches("Rn").count();
     let y = goal.matches("Y").count();
@@ -75,131 +75,77 @@ fn main() -> Result<()> {
         upper,
         upper - rn - ar - 2 * y - 1
     );
-    let steps = dfs_astar(goal, "e", &transforms, 0);
-    println!("Steps are {steps}");
+
+    // The other way to do it...There is a path based on reducing the Rn..Ar sequences
+    // first and then applying transforms to get back to e. But there are paths that
+    // basically loop as we're doing DFS and keep repeating bad solutions. But tracking
+    // this is too memory intensive. So we just Monte-Carlo and sample here since the
+    // dfs() will randomize iteration of the transforms. So it won't work for more than 3s
+    // before giving up and we try again.
+    // Generally this finds a solution within 10s but immediate is about 300ms.
+    loop {
+        let steps = dfs(Instant::now(), goal, "e", &transforms, 0);
+        if steps != usize::MAX {
+            println!("Steps are {steps}");
+            break;
+        }
+        println!("try");
+    }
     Ok(())
 }
 
-fn dfs_astar(cur: &str, m: &str, transforms: &HashMap<&str, Vec<&str>>, cost: usize) -> usize {
-    //println!("{cur} =-> {m}");
+fn dfs(now: Instant, cur: &str, m: &str, transforms: &HashMap<&str, &str>, cost: usize) -> usize {
+    //println!("Checking {cur} at {cost}");
+
+    if now.elapsed().as_secs() > 3 {
+        return usize::MAX;
+    }
     if cur == m {
         return cost;
     }
 
-    let mut trs = transforms
-        .iter()
-        .map(|(k, v)| v.iter().map(|vv| (*vv, *k)).collect::<Vec<_>>())
-        .flatten()
-        .collect::<Vec<_>>();
-    trs.sort_by(|a, b| a.0.len().partial_cmp(&b.0.len()).unwrap());
-
-    let mut new = HashSet::new();
-    for (k, v) in trs.iter().rev() {
-        /*let res = do_all_transforms(cur, k, v, false);
-        if res.1 > 0 {
-            new.insert(res);
-        }*/
-        new = new
-            .union(&do_transform(cur, k, v, false))
-            .cloned()
-            .collect();
-    }
-    let mut candidates = new.iter().map(|x| (x.len(), x)).collect::<Vec<_>>();
-    candidates.sort();
-
-    println!("{} candidates -< {candidates:?}", candidates.len());
-    for k in &candidates {
-        let ret = dfs_astar(&k.1, m, transforms, cost + 1);
-        if ret != usize::MAX {
-            return ret;
+    let mut test = String::from(cur);
+    let mut new_cost = cost;
+    // Reduce all the Rn..Ar sequences first
+    'outer: loop {
+        for (k, v) in transforms.iter().filter(|(k, _)| k.ends_with("Ar")) {
+            if let Some(t) = do_transform(&test, k, v, false).iter().next() {
+                test = t.clone();
+                new_cost += 1;
+            } else {
+                break 'outer;
+            }
         }
-        //println!("dead end");
+    }
+
+    // Randomize rest of the attempts as one of these will find the solution.
+    let mut trs = transforms.iter().collect::<Vec<_>>();
+    let mut rng = rand::thread_rng();
+    trs.shuffle(&mut rng);
+
+    for (k, v) in trs {
+        let c = do_transform(&test, k, v, false);
+        for new in c {
+            let found = dfs(now, &new, m, transforms, new_cost + 1);
+            if found != usize::MAX {
+                return found;
+            }
+        }
     }
     usize::MAX
 }
 
-fn do_all_transforms(start: &str, k: &str, trans: &str, debug: bool) -> (String, usize) {
-    let mut t = start.as_bytes().iter().cloned().collect::<Vec<_>>();
-    let mut cost = 0;
-
-    loop {
-        let p = t.clone();
-        let Some(i) = std::str::from_utf8(&p).unwrap().match_indices(k).next() else {
-            break;
-        };
-        cost += 1;
-        if debug {
-            //    println!("reducing {start} with {i:?}");
-        }
-        for _ in 0..i.1.len() {
-            t.remove(i.0);
-            if debug {
-                //    println!("{} now after remove", std::str::from_utf8(&t).unwrap());
-            }
-        }
-        for byte in trans.bytes().rev() {
-            t.insert(i.0, byte);
-            if debug {
-                //    println!("{} insert", std::str::from_utf8(&t).unwrap());
-            }
-        }
-    }
-    (String::from_utf8(t).unwrap(), cost)
-}
-
 fn do_transform(start: &str, k: &str, trans: &str, debug: bool) -> HashSet<String> {
-    //println!("Calling with {start} {k} {trans}");
+    if debug {
+        println!("Calling with {start} {k} {trans}");
+    }
     let mut ret = HashSet::new();
-    for i in 0..start.len() - k.len() + 1 {
-        if start[i..i + k.len()] == *k {
-            let mut t = start.as_bytes().iter().cloned().collect::<Vec<_>>();
-            if debug {
-                println!("Fixing {}", std::str::from_utf8(&t).unwrap());
-            }
-            for _ in i..i + k.len() {
-                t.remove(i);
-                if debug {
-                    println!("{} now", std::str::from_utf8(&t).unwrap());
-                }
-            }
-            for byte in trans.bytes().rev() {
-                t.insert(i, byte);
-                if debug {
-                    println!("{} insert", std::str::from_utf8(&t).unwrap());
-                }
-            }
-
-            let x = String::from_utf8(t).unwrap();
-            if debug {
-                println!("Found {x} at {}", i);
-            }
-            ret.insert(x);
-        }
+    for i in start.match_indices(k) {
+        // Split into 2 chunks where we've removed the bit we're replacing.
+        let (pre, rem) = start.split_at(i.0);
+        let (_, post) = rem.split_at(k.len());
+        // Now recombine into a new string.
+        ret.insert(format!("{pre}{trans}{post}"));
     }
-    return ret;
-    /*for i in start.match_indices(k) {
-        let mut t = start.as_bytes().iter().cloned().collect::<Vec<_>>();
-        if debug {
-            println!("Fixing {}", std::str::from_utf8(&t).unwrap());
-        }
-        for _ in 0..i.1.len() {
-            t.remove(i.0);
-            if debug {
-                println!("{} now", std::str::from_utf8(&t).unwrap());
-            }
-        }
-        for byte in trans.bytes().rev() {
-            t.insert(i.0, byte);
-            if debug {
-                println!("{} insert", std::str::from_utf8(&t).unwrap());
-            }
-        }
-
-        let x = String::from_utf8(t).unwrap();
-        if debug {
-            println!("Found {x} at {}", i.0);
-        }
-        ret.insert(x);
-    }
-    ret*/
+    ret
 }
