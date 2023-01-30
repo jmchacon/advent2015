@@ -161,43 +161,56 @@ fn main() -> Result<()> {
 
     // Must have a weapon
     let mut best = u64::MAX;
+
+    // Now bad shop keeper who steers you into the most expensive but losing combo.
+    let mut worst = u64::MIN;
     for w in &weapons {
         // Armor optional so run with only ring options first
 
         // No ring
-        best = buy_and_fight(&vec![w], 100, &boss, best, args.debug);
+        best = cheapest_buy_and_fight(&vec![w], 100, &boss, best, args.debug);
+        worst = expensive_buy_and_fight(&vec![w], 100, &boss, worst, args.debug);
 
         // 1 ring
         for r in &rings {
-            best = buy_and_fight(&vec![w, r], 100, &boss, best, args.debug);
+            best = cheapest_buy_and_fight(&vec![w, r], 100, &boss, best, args.debug);
+            worst = expensive_buy_and_fight(&vec![w, r], 100, &boss, worst, args.debug);
         }
 
         // 2 rings
         for r in rings.iter().combinations(2) {
-            best = buy_and_fight(&vec![w, r[0], r[1]], 100, &boss, best, args.debug);
+            best = cheapest_buy_and_fight(&vec![w, r[0], r[1]], 100, &boss, best, args.debug);
+            worst = expensive_buy_and_fight(&vec![w, r[0], r[1]], 100, &boss, worst, args.debug);
         }
 
         // Now check for each armor and possible rings
         for a in &armor {
             // No ring
-            best = buy_and_fight(&vec![w, a], 100, &boss, best, args.debug);
+            best = cheapest_buy_and_fight(&vec![w, a], 100, &boss, best, args.debug);
+            worst = expensive_buy_and_fight(&vec![w, a], 100, &boss, worst, args.debug);
 
             // 1 ring
             for r in &rings {
-                best = buy_and_fight(&vec![w, a, r], 100, &boss, best, args.debug);
+                best = cheapest_buy_and_fight(&vec![w, a, r], 100, &boss, best, args.debug);
+                worst = expensive_buy_and_fight(&vec![w, a, r], 100, &boss, worst, args.debug);
             }
 
             // 2 rings
             for r in rings.iter().combinations(2) {
-                best = buy_and_fight(&vec![w, a, r[0], r[1]], 100, &boss, best, args.debug);
+                best =
+                    cheapest_buy_and_fight(&vec![w, a, r[0], r[1]], 100, &boss, best, args.debug);
+                worst =
+                    expensive_buy_and_fight(&vec![w, a, r[0], r[1]], 100, &boss, worst, args.debug);
             }
         }
     }
     println!("Lowest cost is {best}");
+    println!("Worst cost is {worst}");
+
     Ok(())
 }
 
-fn buy_and_fight(items: &Vec<&Item>, hp: i64, boss: &Stats, best: u64, debug: bool) -> u64 {
+fn buy(items: &Vec<&Item>, hp: i64, debug: bool) -> (Stats, u64) {
     let mut p = Stats {
         hp: hp,
         dmg: 0,
@@ -213,6 +226,33 @@ fn buy_and_fight(items: &Vec<&Item>, hp: i64, boss: &Stats, best: u64, debug: bo
         p.armor += i.armor;
         cost += i.cost
     }
+    (p, cost)
+}
+
+fn expensive_buy_and_fight(
+    items: &Vec<&Item>,
+    hp: i64,
+    boss: &Stats,
+    worst: u64,
+    debug: bool,
+) -> u64 {
+    let (p, cost) = buy(items, hp, debug);
+
+    if !do_fight(&p, &boss) && cost > worst {
+        cost
+    } else {
+        worst
+    }
+}
+
+fn cheapest_buy_and_fight(
+    items: &Vec<&Item>,
+    hp: i64,
+    boss: &Stats,
+    best: u64,
+    debug: bool,
+) -> u64 {
+    let (p, cost) = buy(items, hp, debug);
 
     if do_fight(&p, &boss) && cost < best {
         cost
