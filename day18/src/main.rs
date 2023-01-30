@@ -93,38 +93,36 @@ fn step(grid: &mut Grid<Light>, corners: bool) {
         grid.add(&Location(0, grid.height() - 1), Light::On);
         grid.add(&Location(grid.width() - 1, grid.height() - 1), Light::On);
     }
-    for y in 0..grid.height() {
-        for x in 0..grid.width() {
-            let l = Location(x, y);
-            let mut g = grid.get(&l).clone();
-            if corners
-                && (l == Location(0, 0)
-                    || l == Location(grid.width() - 1, 0)
-                    || l == Location(0, grid.height() - 1)
-                    || l == Location(grid.width() - 1, grid.height() - 1))
-            {
-                g = Light::On;
-            } else {
-                let n = grid
-                    .neighbors_all(&l)
-                    .iter()
-                    .filter(|x| *x.1 == Light::On)
-                    .count();
-                match g {
-                    Light::On => {
-                        if n != 2 && n != 3 {
-                            g = Light::Off;
-                        }
+    for gr in grid.iter() {
+        let l = gr.0;
+        let mut g = gr.1.clone();
+        if corners
+            && (l == Location(0, 0)
+                || l == Location(grid.width() - 1, 0)
+                || l == Location(0, grid.height() - 1)
+                || l == Location(grid.width() - 1, grid.height() - 1))
+        {
+            g = Light::On;
+        } else {
+            let n = grid
+                .neighbors_all(&l)
+                .iter()
+                .filter(|x| *x.1 == Light::On)
+                .count();
+            match g {
+                Light::On => {
+                    if n != 2 && n != 3 {
+                        g = Light::Off;
                     }
-                    Light::Off => {
-                        if n == 3 {
-                            g = Light::On;
-                        }
+                }
+                Light::Off => {
+                    if n == 3 {
+                        g = Light::On;
                     }
                 }
             }
-            newgrid.add(&l, g);
         }
+        newgrid.add(&l, g);
     }
     *grid = newgrid;
 }
