@@ -106,9 +106,12 @@ fn dfs(now: Instant, cur: &str, m: &str, transforms: &HashMap<&str, &str>, cost:
 
     let mut test = String::from(cur);
     let mut new_cost = cost;
-    // Reduce all the Rn..Ar sequences first
+    // Reduce all the Rn..Y[F|Mg]Ar sequences first since these are terminal and can't be separated.
     'outer: loop {
-        for (k, v) in transforms.iter().filter(|(k, _)| k.ends_with("Ar")) {
+        for (k, v) in transforms
+            .iter()
+            .filter(|(k, _)| k.ends_with("YFAr") || k.ends_with("YMgAr"))
+        {
             if let Some(t) = do_transform(&test, k, v, false).iter().next() {
                 test = t.clone();
                 new_cost += 1;
@@ -123,7 +126,11 @@ fn dfs(now: Instant, cur: &str, m: &str, transforms: &HashMap<&str, &str>, cost:
     let mut rng = rand::thread_rng();
     trs.shuffle(&mut rng);
 
+    println!("{:?}", trs[0]);
     for (k, v) in trs {
+        if *v == "e" && test.len() != k.len() {
+            continue;
+        }
         let c = do_transform(&test, k, v, false);
         for new in c {
             let found = dfs(now, &new, m, transforms, new_cost + 1);
