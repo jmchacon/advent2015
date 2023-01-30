@@ -61,7 +61,7 @@ fn main() -> Result<()> {
         }
     }
 
-    let on = grid.into_iter().filter(|x| *x == Light::On).count();
+    let on = grid.iter().filter(|(_, x)| *x == &Light::On).count();
     println!("{on} lights on after {} rounds", args.rounds);
     if args.debug {
         println!();
@@ -74,7 +74,7 @@ fn main() -> Result<()> {
         }
     }
 
-    let on = orig_grid.into_iter().filter(|x| *x == Light::On).count();
+    let on = orig_grid.iter().filter(|(_, x)| *x == &Light::On).count();
     println!(
         "{on} lights with stuck corners on after {} rounds",
         args.rounds
@@ -130,13 +130,10 @@ fn step(grid: &mut Grid<Light>, corners: bool) {
 }
 
 fn print_board(grid: &Grid<Light>) {
-    for y in 0..grid.height() {
-        for x in 0..grid.width() {
-            match grid.get(&Location(x, y)) {
-                Light::On => print!("#"),
-                Light::Off => print!("."),
-            }
+    for g in grid {
+        match g.1 {
+            Light::On => print!("#"),
+            Light::Off => print!("."),
         }
-        println!();
     }
 }
