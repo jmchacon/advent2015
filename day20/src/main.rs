@@ -25,7 +25,7 @@ fn main() -> Result<()> {
         let root = (start as f64).sqrt() as u64;
         let mut div = Vec::new();
         // Find all divisors up to the square root.
-        for j in 1..=root + 1 {
+        for j in 1..=root {
             if start % j == 0 {
                 div.push(j);
             }
@@ -42,7 +42,8 @@ fn main() -> Result<()> {
         let sum = f.iter().sum::<u64>() * 10;
         let sum2 = f
             .iter()
-            .map(|x| if start / x <= 50 { *x } else { 0 })
+            // Exclude anything that is above 50 deliveries
+            .map(|x| if start / x > 50 { 0 } else { *x })
             .sum::<u64>()
             * 11;
         if sum >= args.input && !done1 {
