@@ -113,9 +113,17 @@ fn main() -> Result<()> {
         effects: HashMap::new(),
     };
 
+    let total = run_battle(&player, &boss, &spells, false, args.debug);
+    println!("Total {total}");
+    let hard_total = run_battle(&player, &boss, &spells, true, args.debug);
+    println!("Hard total {hard_total}");
+    Ok(())
+}
+
+fn run_battle(player: &Stats, boss: &Stats, spells: &Vec<Spell>, hard: bool, debug: bool) -> i64 {
     let mut q = BinaryHeap::new();
 
-    q.push(Reverse((0, player, boss)));
+    q.push(Reverse((0, player.clone(), boss.clone())));
 
     let mut total = 0;
     'outer: while let Some(e) = q.pop() {
@@ -124,6 +132,15 @@ fn main() -> Result<()> {
         let mut boss = e.0 .2;
 
         // player turn
+
+        // Hard mode
+        if hard {
+            player.hp -= 1;
+            if player.hp <= 0 {
+                // Died so nothing else to do.
+                continue;
+            }
+        }
 
         // Run current effects and then reset the hash for spells
         let mut neweffect = HashMap::new();
@@ -156,7 +173,7 @@ fn main() -> Result<()> {
         }
 
         // Otherwise we try each spell and push onto the queue if it can be cast.
-        for s in &spells {
+        for s in spells {
             if player.mana - s.cost > 0 {
                 let mut new = player.clone();
                 new.mana -= s.cost;
@@ -233,13 +250,12 @@ fn main() -> Result<()> {
                 }
 
                 // Otherwise push it on to try getting to boss death
-                if args.debug {
+                if debug {
                     println!("Casting {}", s.name);
                 }
                 q.push(Reverse((newspent, new, newboss)));
             }
         }
     }
-    println!("Total {total}");
-    Ok(())
+    total
 }
