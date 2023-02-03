@@ -1,12 +1,11 @@
 //! day22 advent 2022
+use crate::Effect::*;
+use clap::Parser;
+use color_eyre::eyre::Result;
 use std::{
     cmp::{Ordering, Reverse},
     collections::{BinaryHeap, HashMap},
 };
-
-use crate::Effect::*;
-use clap::Parser;
-use color_eyre::eyre::Result;
 use strum_macros::Display;
 
 #[derive(Parser)]
