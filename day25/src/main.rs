@@ -1,29 +1,45 @@
-//! day25 advent 2022
+//! day25 advent 2015
 use clap::Parser;
 use color_eyre::eyre::Result;
-use slab_tree::tree::TreeBuilder;
-use std::collections::HashMap;
-use std::fs::File;
-use std::io;
-use std::io::BufRead;
-use std::path::Path;
 
 #[derive(Parser)]
 #[command(author, version, about)]
 struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
+
+    #[arg(long, default_value_t = false)]
+    debug: bool,
+
+    #[arg(long, default_value_t = 3010)]
+    row: u64,
+
+    #[arg(long, default_value_t = 3019)]
+    column: u64,
 }
 
 fn main() -> Result<()> {
     color_eyre::install()?;
     let args: Args = Args::parse();
 
-    let filename = Path::new(env!("CARGO_MANIFEST_DIR")).join(args.filename);
-    let file = File::open(filename)?;
-    let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
-
-    for (line_num, line) in lines.iter().enumerate() {}
-
+    let mut row = 1_u64;
+    let mut col = 6_u64;
+    let mut val = 33511524_u64;
+    let mult = 252533_u64;
+    let rem = 33554393_u64;
+    loop {
+        if row == 1 {
+            row = col + 1;
+            col = 1
+        } else {
+            row -= 1;
+            col += 1;
+        }
+        val = val * mult % rem;
+        if row == args.row && col == args.column {
+            break;
+        }
+    }
+    println!("At {},{} - {val}", args.row, args.column);
     Ok(())
 }
