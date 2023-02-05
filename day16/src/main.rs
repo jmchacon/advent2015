@@ -1,4 +1,4 @@
-//! day16 advent 2022
+//! day16 advent 2015
 #![feature(iter_order_by)]
 
 use clap::Parser;

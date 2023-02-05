@@ -1,4 +1,4 @@
-//! day1 advent 2022
+//! day1 advent 2015
 use color_eyre::eyre::Result;
 use std::fs::File;
 use std::io;

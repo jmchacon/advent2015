@@ -1,4 +1,4 @@
-//! day12 advent 2022
+//! day12 advent 2015
 use clap::Parser;
 use color_eyre::eyre::Result;
 use serde_json::Value;

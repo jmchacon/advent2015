@@ -1,4 +1,4 @@
-//! day7 advent 2022
+//! day7 advent 2015
 use clap::Parser;
 use color_eyre::eyre::Result;
 use std::collections::HashMap;

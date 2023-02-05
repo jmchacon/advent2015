@@ -1,4 +1,4 @@
-//! day3 advent 2022
+//! day3 advent 2015
 use color_eyre::eyre::Result;
 use std::collections::HashSet;
 use std::fs::File;

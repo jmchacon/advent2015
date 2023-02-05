@@ -1,4 +1,4 @@
-//! day18 advent 2022
+//! day18 advent 2015
 use clap::Parser;
 use color_eyre::eyre::Result;
 use grid::{Grid, Location};

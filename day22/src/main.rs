@@ -1,4 +1,4 @@
-//! day22 advent 2022
+//! day22 advent 2015
 use crate::Effect::*;
 use clap::Parser;
 use color_eyre::eyre::Result;
