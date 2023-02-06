@@ -13,6 +13,9 @@ use std::path::Path;
 struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
+
+    #[arg(long, default_value_t = false)]
+    debug: bool,
 }
 
 fn main() -> Result<()> {
@@ -28,7 +31,7 @@ fn main() -> Result<()> {
     for (line_num, line) in lines.iter().enumerate() {
         let parts: Vec<&str> = line.split_whitespace().collect();
         assert!(parts.len() == 5, "{} - bad line {line}", line_num + 1);
-        let val = usize::from_str_radix(parts[4], 10).unwrap();
+        let val = parts[4].parse::<usize>().unwrap();
         let key = String::from(parts[0]);
         let second = String::from(parts[2]);
         if !hm.contains_key(&key) {
@@ -40,11 +43,15 @@ fn main() -> Result<()> {
         hm.get_mut(&key).unwrap().insert(second.clone(), val);
         hm.get_mut(&second).unwrap().insert(key.clone(), val);
     }
-    for (k, v) in &hm {
-        println!("{k} -> {v:?}");
+    if args.debug {
+        for (k, v) in &hm {
+            println!("{k} -> {v:?}");
+        }
     }
     let perms = hm.keys().permutations(hm.len());
-    println!("permutations");
+    if args.debug {
+        println!("permutations");
+    }
     let mut res = Vec::new();
     for p in perms {
         let mut tot = 0;
@@ -52,9 +59,11 @@ fn main() -> Result<()> {
             tot += hm.get(p[i]).unwrap().get(p[i + 1]).unwrap();
         }
         res.push(tot);
-        println!("{p:?} - {tot}");
+        if args.debug {
+            println!("{p:?} - {tot}");
+        }
     }
-    println!("min: {}", res.iter().min().unwrap());
-    println!("max: {}", res.iter().max().unwrap());
+    println!("part1: min: {}", res.iter().min().unwrap());
+    println!("part2: max: {}", res.iter().max().unwrap());
     Ok(())
 }
