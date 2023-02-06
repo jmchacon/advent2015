@@ -1,12 +1,23 @@
 //! day1 advent 2015
+use clap::Parser;
 use color_eyre::eyre::Result;
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
 use std::path::Path;
 
+#[derive(Parser)]
+#[command(author, version, about)]
+struct Args {
+    #[arg(long, default_value_t = String::from("input.txt"))]
+    filename: String,
+}
+
 fn main() -> Result<()> {
-    let filename = Path::new(env!("CARGO_MANIFEST_DIR")).join("input.txt");
+    color_eyre::install()?;
+    let args: Args = Args::parse();
+
+    let filename = Path::new(env!("CARGO_MANIFEST_DIR")).join(args.filename);
     let file = File::open(filename)?;
     let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
 
@@ -31,10 +42,10 @@ fn main() -> Result<()> {
             }
             if !found && floor == -1 {
                 found = true;
-                println!("{} first floor -1 pos", pos + 1);
+                println!("part2: {} first floor -1 pos", pos + 1);
             }
         }
-        println!("Ended on {floor}");
+        println!("part1: Ended on {floor}");
     }
 
     Ok(())
