@@ -23,26 +23,44 @@ fn main() -> Result<()> {
 
     let mut p = args.input.clone();
 
-    let mut pass = unsafe { p.as_bytes_mut() };
+    let pass = unsafe { p.as_bytes_mut() };
 
-    println!("{}", args.input);
-    for i in 0..args.iterations {
-        increment(&mut pass);
+    let mut part = 1;
+    loop {
+        if part > 2 {
+            break;
+        }
         if args.debug {
-            // SAFETY: We know this is valid utf8 ascii so increment will
-            //         still leave it in a state we can blind convert.
+            // SAFETY: We know this is valid utf8 ascii as we just converted it
+            // or finished.
             unsafe {
                 println!("{}", std::str::from_utf8(pass).unwrap_unchecked());
             }
         }
-        if test1(pass) && test2(pass) && test3(pass) {
-            // SAFETY: We know this is valid utf8 ascii so increment will
-            //         still leave it in a state we can blind convert.
-            unsafe {
-                println!("{}", std::str::from_utf8(pass).unwrap_unchecked());
+        for i in 0..args.iterations {
+            increment(pass);
+            if args.debug {
+                // SAFETY: We know this is valid utf8 ascii so increment will
+                //         still leave it in a state we can blind convert.
+                unsafe {
+                    println!("{}", std::str::from_utf8(pass).unwrap_unchecked());
+                }
             }
-            println!("Found in {i} iterations");
-            break;
+            if test1(pass) && test2(pass) && test3(pass) {
+                // SAFETY: We know this is valid utf8 ascii so increment will
+                //         still leave it in a state we can blind convert.
+                unsafe {
+                    println!(
+                        "part{part}: {}",
+                        std::str::from_utf8(pass).unwrap_unchecked()
+                    );
+                    part += 1;
+                }
+                if args.debug {
+                    println!("Found in {i} iterations");
+                }
+                break;
+            }
         }
     }
     Ok(())
@@ -75,7 +93,7 @@ fn test1(pass: &[u8]) -> bool {
 // mistaken for other characters and are therefore confusing.
 fn test2(pass: &[u8]) -> bool {
     pass.iter()
-        .cloned()
+        .copied()
         .filter(|x| *x != b'i' && *x != b'o' && *x != b'l')
         .count()
         == pass.len()
