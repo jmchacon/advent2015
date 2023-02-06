@@ -30,13 +30,13 @@ fn main() -> Result<()> {
     for (line_num, line) in lines.iter().enumerate() {
         let parts = line.split_whitespace().collect::<Vec<&str>>();
         assert!(parts.len() == 11, "{} - bad line {line}", line_num + 1);
-        let mut happiness = i64::from_str_radix(parts[3], 10).unwrap();
+        let mut happiness = parts[3].parse::<i64>().unwrap();
         if parts[2] == "lose" {
             happiness *= -1;
         } else {
             assert!(parts[2] == "gain", "{} - bad line {line}", line_num + 1);
         }
-        let sit = parts[10].trim_end_matches(".");
+        let sit = parts[10].trim_end_matches('.');
         happy
             .entry(parts[0])
             .and_modify(|v: &mut HashMap<&str, i64>| {
@@ -45,10 +45,10 @@ fn main() -> Result<()> {
             .or_insert(HashMap::from([(sit, happiness)]));
     }
 
-    run_table(&happy, args.debug);
+    run_table(&happy, 1, args.debug);
 
     // Part2 is add self
-    let keys = happy.keys().cloned().collect::<Vec<_>>();
+    let keys = happy.keys().copied().collect::<Vec<_>>();
     for k in keys {
         happy
             .entry("Self")
@@ -64,13 +64,13 @@ fn main() -> Result<()> {
             .or_insert(HashMap::from([("Self", 0)]));
     }
 
-    run_table(&happy, args.debug);
+    run_table(&happy, 2, args.debug);
     Ok(())
 }
 
-fn run_table(happy: &HashMap<&str, HashMap<&str, i64>>, debug: bool) {
-    println!("Table size is {}", happy.len());
+fn run_table(happy: &HashMap<&str, HashMap<&str, i64>>, part: i32, debug: bool) {
     if debug {
+        println!("Table size is {}", happy.len());
         for (person, v) in happy {
             for (sit, happy) in v {
                 println!("{person} -> {sit} - {happy}");
@@ -80,12 +80,12 @@ fn run_table(happy: &HashMap<&str, HashMap<&str, i64>>, debug: bool) {
 
     let max = happy
         .keys()
-        .cloned()
+        .copied()
         .permutations(happy.len())
         .map(|v| compute_happiness(happy, &v))
         .max()
         .unwrap();
-    println!("max is {max}");
+    println!("part{part}: max is {max}");
 }
 
 fn compute_happiness(happy: &HashMap<&str, HashMap<&str, i64>>, table: &Vec<&str>) -> i64 {
