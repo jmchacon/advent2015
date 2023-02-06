@@ -13,6 +13,9 @@ struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
 
+    #[arg(long, default_value_t = false)]
+    debug: bool,
+
     #[arg(long, default_value_t = 1000)]
     width: usize,
 
@@ -70,19 +73,21 @@ fn main() -> Result<()> {
             }
         }
         let (x1, x2, y1, y2);
-        let xs: Vec<&str> = parse1.split(",").collect();
-        let ys: Vec<&str> = parse2.split(",").collect();
+        let xs: Vec<&str> = parse1.split(',').collect();
+        let ys: Vec<&str> = parse2.split(',').collect();
         assert!(
             xs.len() == 2 && ys.len() == 2,
             "{} - bad line {line}",
             line_num + 1
         );
 
-        x1 = usize::from_str_radix(xs[0], 10).unwrap();
-        y1 = usize::from_str_radix(xs[1], 10).unwrap();
-        x2 = usize::from_str_radix(ys[0], 10).unwrap();
-        y2 = usize::from_str_radix(ys[1], 10).unwrap();
-        println!("{x1},{x2} -> {y1},{y2}");
+        x1 = xs[0].parse::<usize>().unwrap();
+        y1 = xs[1].parse::<usize>().unwrap();
+        x2 = ys[0].parse::<usize>().unwrap();
+        y2 = ys[1].parse::<usize>().unwrap();
+        if args.debug {
+            println!("{x1},{x2} -> {y1},{y2}");
+        }
         for x in x1..=x2 {
             for y in y1..=y2 {
                 match state {
@@ -120,7 +125,7 @@ fn main() -> Result<()> {
             }
         }
     }
-    println!("lit - {}", hs.len());
-    println!("brightness - {}", hm.values().sum::<usize>());
+    println!("part1: lit - {}", hs.len());
+    println!("part2: brightness - {}", hm.values().sum::<usize>());
     Ok(())
 }
