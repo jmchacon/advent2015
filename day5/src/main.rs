@@ -12,6 +12,9 @@ use std::path::Path;
 struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
+
+    #[arg(long, default_value_t = false)]
+    debug: bool,
 }
 
 fn main() -> Result<()> {
@@ -73,19 +76,23 @@ fn main() -> Result<()> {
             prev = *c;
         }
 
-        if !naughty {
-            if vowels.iter().map(|(_, v)| *v).sum::<i32>() >= 3 && twice {
-                nice += 1;
+        if !naughty && vowels.values().sum::<i32>() >= 3 && twice {
+            nice += 1;
+            if args.debug {
                 println!("{line} is nice");
             }
         }
-        println!("pairs for {line}: {pairs:?}");
+        if args.debug {
+            println!("pairs for {line}: {pairs:?}");
+        }
         if pairs.iter().any(|(_, v)| *v >= 2) && pair_with_space {
             nice2 += 1;
-            println!("{line} is nice2");
+            if args.debug {
+                println!("{line} is nice2");
+            }
         }
     }
-    println!("total nice = {nice}");
-    println!("total nice2 = {nice2}");
+    println!("part1: total nice = {nice}");
+    println!("part2: total nice = {nice2}");
     Ok(())
 }
