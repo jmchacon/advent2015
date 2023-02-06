@@ -12,6 +12,9 @@ use std::str;
 struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
+
+    #[arg(long, default_value_t = false)]
+    debug: bool,
 }
 
 fn main() -> Result<()> {
@@ -45,47 +48,49 @@ fn main() -> Result<()> {
             if pos >= last {
                 break;
             }
-            match raw[pos] {
-                b'\\' => {
-                    pos += 1;
-                    local_encoded_code += 1;
-                    assert!(pos < last, "{} - bad line {line}", line_num + 1);
-                    match raw[pos] {
-                        b'\\' | b'"' => {
-                            local_chars += 1;
-                            local_encoded_code += 1;
-                            pos += 1;
-                        }
-                        b'x' => {
-                            pos += 1;
-                            // Need 2 chars here
-                            assert!(pos < last - 1, "{} - bad line {line}", line_num + 1);
-                            let _ =
-                                u8::from_str_radix(str::from_utf8(&raw[pos..pos + 2]).unwrap(), 16)
-                                    .unwrap();
-                            pos += 2;
-                            local_chars += 1;
-                        }
-                        _ => {
-                            panic!("{} - bad line {line}", line_num + 1);
-                        }
+            if raw[pos] == b'\\' {
+                pos += 1;
+                local_encoded_code += 1;
+                assert!(pos < last, "{} - bad line {line}", line_num + 1);
+                match raw[pos] {
+                    b'\\' | b'"' => {
+                        local_chars += 1;
+                        local_encoded_code += 1;
+                        pos += 1;
+                    }
+                    b'x' => {
+                        pos += 1;
+                        // Need 2 chars here
+                        assert!(pos < last - 1, "{} - bad line {line}", line_num + 1);
+                        let _ = u8::from_str_radix(str::from_utf8(&raw[pos..pos + 2]).unwrap(), 16)
+                            .unwrap();
+                        pos += 2;
+                        local_chars += 1;
+                    }
+                    _ => {
+                        panic!("{} - bad line {line}", line_num + 1);
                     }
                 }
-                _ => {
-                    local_chars += 1;
-                    pos += 1;
-                }
-            };
+            } else {
+                local_chars += 1;
+                pos += 1;
+            }
         }
-        println!("{line} - {local_code} {local_chars} {local_encoded_code}");
+        if args.debug {
+            println!("{line} - {local_code} {local_chars} {local_encoded_code}");
+        }
         code += local_code;
         chars += local_chars;
         encoded_code += local_encoded_code;
     }
-    println!("code - {code}");
-    println!("chars - {chars}");
-    println!("diff - {}", code - chars);
-    println!("encoded_code - {}", encoded_code);
-    println!("diff2 - {}", encoded_code - code);
+    if args.debug {
+        println!("code - {code}");
+        println!("chars - {chars}");
+    }
+    println!("part1: diff - {}", code - chars);
+    if args.debug {
+        println!("encoded_code - {encoded_code}");
+    }
+    println!("part2: diff - {}", encoded_code - code);
     Ok(())
 }
