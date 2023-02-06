@@ -10,11 +10,11 @@ struct Args {
     #[arg(long, default_value_t = String::from("cqjxjnds"))]
     input: String,
 
+     #[arg(long, default_value_t = false)]
+    debug: bool,
+    
     #[arg(long, default_value_t = usize::MAX)]
     iterations: usize,
-
-    #[arg(long, default_value_t = false)]
-    debug: bool,
 }
 
 fn main() -> Result<()> {
