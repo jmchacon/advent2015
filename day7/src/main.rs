@@ -13,6 +13,9 @@ use strum_macros::Display;
 struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
+
+    #[arg(long, default_value_t = false)]
+    debug: bool,
 }
 
 #[derive(Clone, Debug, Display)]
@@ -56,98 +59,22 @@ fn main() -> Result<()> {
             line_num + 1
         );
 
-        match parts.len() {
-            3 => {
-                if let Ok(v) = u16::from_str_radix(parts[0], 10) {
-                    vals.insert(String::from(parts[2]), v);
-                } else {
-                    let e = String::from(parts[0]);
-                    let op = Operation {
-                        operator: Operator::Assign,
-                        dest: String::from(parts[2]),
-                    };
-                    hm.entry(e)
-                        .and_modify(|v: &mut Vec<Operation>| v.push(op.clone()))
-                        .or_insert(vec![op]);
-                }
-            }
-            4 => {
-                // all NOT
-                assert!(parts[0] == "NOT", "{} - bad line {line}", line_num + 1);
-                let e = String::from(parts[1]);
-                let op = Operation {
-                    operator: Operator::Not,
-                    dest: String::from(parts[3]),
-                };
-                hm.entry(e)
-                    .and_modify(|v: &mut Vec<Operation>| v.push(op.clone()))
-                    .or_insert(vec![op]);
-            }
-            5 => {
-                let op;
-                let mut e = String::from(parts[0]);
-                match parts[1] {
-                    "AND" => {
-                        // Special case based on known input.
-                        if parts[0] == "1" {
-                            e = String::from(parts[2]);
-                            op = Operation {
-                                operator: Operator::And(Input::Val(1)),
-                                dest: String::from(parts[4]),
-                            };
-                        } else {
-                            op = Operation {
-                                operator: Operator::And(Input::Var(String::from(parts[2]))),
-                                dest: String::from(parts[4]),
-                            };
-                        }
-                    }
-                    "OR" => {
-                        op = Operation {
-                            operator: Operator::Or(Input::Var(String::from(parts[2]))),
-                            dest: String::from(parts[4]),
-                        };
-                    }
-                    "LSHIFT" => {
-                        let v = u16::from_str_radix(parts[2], 10).unwrap();
-                        op = Operation {
-                            operator: Operator::Lshift(v),
-                            dest: String::from(parts[4]),
-                        };
-                    }
-                    "RSHIFT" => {
-                        let v = u16::from_str_radix(parts[2], 10).unwrap();
-                        op = Operation {
-                            operator: Operator::Rshift(v),
-                            dest: String::from(parts[4]),
-                        };
-                    }
-                    _ => {
-                        panic!("{} - bad line {line}", line_num + 1);
-                    }
-                }
-                hm.entry(e)
-                    .and_modify(|v: &mut Vec<Operation>| v.push(op.clone()))
-                    .or_insert(vec![op]);
-            }
-            _ => {
-                panic!("{} - bad line {line}", line_num + 1);
-            }
+        parse_line(&parts, &mut hm, &mut vals, line, line_num);
+    }
+    if args.debug {
+        println!("hm:");
+        let mut keys: Vec<&String> = hm.keys().collect();
+        keys.sort();
+        for k in keys {
+            println!("{k} - {:?}", hm[k]);
+        }
+        println!("vals:");
+        let mut keys: Vec<&String> = vals.keys().collect();
+        keys.sort();
+        for k in keys {
+            println!("{k} - {}", vals[k]);
         }
     }
-    println!("hm:");
-    let mut keys: Vec<&String> = hm.keys().collect();
-    keys.sort();
-    for k in keys {
-        println!("{k} - {:?}", hm[k]);
-    }
-    println!("vals:");
-    let mut keys: Vec<&String> = vals.keys().collect();
-    keys.sort();
-    for k in keys {
-        println!("{k} - {}", vals[k]);
-    }
-
     let hm2 = hm.clone();
     let mut vals2 = vals.clone();
 
@@ -155,7 +82,7 @@ fn main() -> Result<()> {
     loop {
         if vals.contains_key("a") {
             let val = vals.get(&String::from("a")).unwrap();
-            println!("found a - {val}");
+            println!("part{}: found a - {val}", iter + 1);
             vals2.insert(String::from("b"), *val);
             iter += 1;
             if iter >= 2 {
@@ -165,7 +92,7 @@ fn main() -> Result<()> {
             vals = vals2.clone();
         }
         let mut skipped = false;
-        let mut keys: Vec<String> = vals.keys().map(|k| k.clone()).collect();
+        let mut keys = vals.keys().cloned().collect::<Vec<_>>();
         keys.sort();
         for k in &keys {
             if !hm.contains_key(k) {
@@ -214,4 +141,91 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn parse_line(
+    parts: &Vec<&str>,
+    hm: &mut HashMap<String, Vec<Operation>>,
+    vals: &mut HashMap<String, u16>,
+    line: &str,
+    line_num: usize,
+) {
+    match parts.len() {
+        3 => {
+            if let Ok(v) = parts[0].parse::<u16>() {
+                vals.insert(String::from(parts[2]), v);
+            } else {
+                let e = String::from(parts[0]);
+                let op = Operation {
+                    operator: Operator::Assign,
+                    dest: String::from(parts[2]),
+                };
+                hm.entry(e)
+                    .and_modify(|v: &mut Vec<Operation>| v.push(op.clone()))
+                    .or_insert(vec![op]);
+            }
+        }
+        4 => {
+            // all NOT
+            assert!(parts[0] == "NOT", "{} - bad line {line}", line_num + 1);
+            let e = String::from(parts[1]);
+            let op = Operation {
+                operator: Operator::Not,
+                dest: String::from(parts[3]),
+            };
+            hm.entry(e)
+                .and_modify(|v: &mut Vec<Operation>| v.push(op.clone()))
+                .or_insert(vec![op]);
+        }
+        5 => {
+            let op;
+            let mut e = String::from(parts[0]);
+            match *parts.get(1).unwrap() {
+                "AND" => {
+                    // Special case based on known input.
+                    if parts[0] == "1" {
+                        e = String::from(parts[2]);
+                        op = Operation {
+                            operator: Operator::And(Input::Val(1)),
+                            dest: String::from(parts[4]),
+                        };
+                    } else {
+                        op = Operation {
+                            operator: Operator::And(Input::Var(String::from(parts[2]))),
+                            dest: String::from(parts[4]),
+                        };
+                    }
+                }
+                "OR" => {
+                    op = Operation {
+                        operator: Operator::Or(Input::Var(String::from(parts[2]))),
+                        dest: String::from(parts[4]),
+                    };
+                }
+                "LSHIFT" => {
+                    let v = parts[2].parse::<u16>().unwrap();
+                    op = Operation {
+                        operator: Operator::Lshift(v),
+                        dest: String::from(parts[4]),
+                    };
+                }
+                "RSHIFT" => {
+                    let v = parts[2].parse::<u16>().unwrap();
+                    op = Operation {
+                        operator: Operator::Rshift(v),
+                        dest: String::from(parts[4]),
+                    };
+                }
+                _ => {
+                    panic!("{} - bad line {line}", line_num + 1);
+                }
+            }
+            hm.entry(e)
+                .and_modify(|v: &mut Vec<Operation>| v.push(op.clone()))
+                .or_insert(vec![op]);
+        }
+        _ => {
+            panic!("{} - bad line {line}", line_num + 1);
+        }
+    }
 }
