@@ -22,6 +22,11 @@ fn main() -> Result<()> {
     let (mut done1, mut done2) = (false, false);
 
     for start in args.start.. {
+        #[allow(
+            clippy::cast_possible_truncation,
+            clippy::cast_precision_loss,
+            clippy::cast_sign_loss
+        )]
         let root = (start as f64).sqrt() as u64;
         let mut div = Vec::new();
         // Find all divisors up to the square root.
@@ -47,11 +52,11 @@ fn main() -> Result<()> {
             .sum::<u64>()
             * 11;
         if sum >= args.input && !done1 {
-            println!("{start} -> {sum}");
+            println!("part1: {start} -> {sum}");
             done1 = true;
         }
         if sum2 >= args.input && !done2 {
-            println!("part2 {start} => {sum}");
+            println!("part2: {start} => {sum}");
             done2 = true;
         }
         if done1 && done2 {

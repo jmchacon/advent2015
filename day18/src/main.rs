@@ -14,11 +14,11 @@ struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
 
-    #[arg(long, default_value_t = 100)]
-    rounds: usize,
-
     #[arg(long, default_value_t = false)]
     debug: bool,
+
+    #[arg(long, default_value_t = 100)]
+    rounds: usize,
 }
 
 #[derive(Clone, Debug, Default, Display, PartialEq, Eq)]
@@ -50,8 +50,9 @@ fn main() -> Result<()> {
 
     let mut orig_grid = grid.clone();
 
-    print_board(&grid);
-    println!();
+    if args.debug {
+        print_board(&grid);
+    }
 
     for _ in 0..args.rounds {
         step(&mut grid, false);
@@ -62,7 +63,7 @@ fn main() -> Result<()> {
     }
 
     let on = grid.iter().filter(|(_, x)| *x == &Light::On).count();
-    println!("{on} lights on after {} rounds", args.rounds);
+    println!("part1: {on} lights on after {} rounds", args.rounds);
     if args.debug {
         println!();
     }
@@ -70,13 +71,12 @@ fn main() -> Result<()> {
         step(&mut orig_grid, true);
         if args.debug {
             print_board(&orig_grid);
-            println!();
         }
     }
 
     let on = orig_grid.iter().filter(|(_, x)| *x == &Light::On).count();
     println!(
-        "{on} lights with stuck corners on after {} rounds",
+        "part2: {on} lights with stuck corners on after {} rounds",
         args.rounds
     );
     Ok(())
@@ -134,4 +134,5 @@ fn print_board(grid: &Grid<Light>) {
             Light::Off => print!("."),
         }
     }
+    println!();
 }

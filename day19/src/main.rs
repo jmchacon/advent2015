@@ -32,7 +32,7 @@ fn main() -> Result<()> {
     for (line_num, line) in lines.iter().enumerate() {
         // Blank line means we're done with the main part. Only thing after should
         // be the last line which we already snagged above.
-        if line.len() == 0 {
+        if line.is_empty() {
             break;
         }
         let parts = line.split_whitespace().collect::<Vec<_>>();
@@ -40,14 +40,18 @@ fn main() -> Result<()> {
         // The input should have distinct right sides with N identical left.
         // So invert and store into a hashmap. This is simpler than keying off
         // the left and having to use a Vec of values.
-        if transforms.insert(parts[2], parts[0]) != None {
-            panic!("{} - bad line {line} - dup", line_num + 1);
-        }
+        assert!(
+            transforms.insert(parts[2], parts[0]).is_none(),
+            "{} - bad line {line} - dup",
+            line_num + 1
+        );
     }
 
-    println!("start: {goal}");
-    for (k, v) in &transforms {
-        println!("{k} -> {v:?}");
+    if args.debug {
+        println!("start: {goal}");
+        for (k, v) in &transforms {
+            println!("{k} -> {v:?}");
+        }
     }
 
     let mut new = HashSet::new();
@@ -60,20 +64,22 @@ fn main() -> Result<()> {
             .cloned()
             .collect();
     }
-    println!("Count is {} for {goal}", new.len());
+    println!("part1: Count is {} for {goal}", new.len());
 
-    println!();
+    if args.debug {
+        println!();
+    }
     // Someone did an analysis of the input and since it's XRn..Ar sequences
     // and Y sequences and everything else is single chars you can reduce
     // this to a calculation.
     let ar = goal.matches("Ar").count();
     let rn = goal.matches("Rn").count();
-    let y = goal.matches("Y").count();
+    let y = goal.matches('Y').count();
     let upper = goal.bytes().filter(|x| *x >= b'A' && *x <= b'Z').count();
     println!(
-        "{} {ar} {rn} {y} Took {} steps to get from e -> {goal}",
+        "part2: computed {} steps with - {} {ar} {rn} {y} to get from e -> {goal}",
+        upper - rn - ar - 2 * y - 1,
         upper,
-        upper - rn - ar - 2 * y - 1
     );
 
     // The other way to do it...There is a path based on reducing the Rn..Ar sequences
@@ -84,17 +90,26 @@ fn main() -> Result<()> {
     // before giving up and we try again.
     // Generally this finds a solution within 10s but immediate is about 300ms.
     loop {
-        let steps = dfs(Instant::now(), goal, "e", &transforms, 0);
+        let steps = dfs(Instant::now(), goal, "e", &transforms, 0, args.debug);
         if steps != usize::MAX {
-            println!("Steps are {steps}");
+            println!("part2: Steps are {steps}");
             break;
         }
-        println!("try");
+        if args.debug {
+            println!("try");
+        }
     }
     Ok(())
 }
 
-fn dfs(now: Instant, cur: &str, m: &str, transforms: &HashMap<&str, &str>, cost: usize) -> usize {
+fn dfs(
+    now: Instant,
+    cur: &str,
+    m: &str,
+    transforms: &HashMap<&str, &str>,
+    cost: usize,
+    debug: bool,
+) -> usize {
     //println!("Checking {cur} at {cost}");
 
     if now.elapsed().as_secs() > 3 {
@@ -126,14 +141,16 @@ fn dfs(now: Instant, cur: &str, m: &str, transforms: &HashMap<&str, &str>, cost:
     let mut rng = rand::thread_rng();
     trs.shuffle(&mut rng);
 
-    println!("{:?}", trs[0]);
+    if debug {
+        println!("{:?}", trs[0]);
+    }
     for (k, v) in trs {
         if *v == "e" && test.len() != k.len() {
             continue;
         }
         let c = do_transform(&test, k, v, false);
         for new in c {
-            let found = dfs(now, &new, m, transforms, new_cost + 1);
+            let found = dfs(now, &new, m, transforms, new_cost + 1, debug);
             if found != usize::MAX {
                 return found;
             }
@@ -149,8 +166,8 @@ fn do_transform(start: &str, k: &str, trans: &str, debug: bool) -> HashSet<Strin
     let mut ret = HashSet::new();
     for i in start.match_indices(k) {
         // Split into 2 chunks where we've removed the bit we're replacing.
-        let (pre, rem) = start.split_at(i.0);
-        let (_, post) = rem.split_at(k.len());
+        let (pre, remainder) = start.split_at(i.0);
+        let (_, post) = remainder.split_at(k.len());
         // Now recombine into a new string.
         ret.insert(format!("{pre}{trans}{post}"));
     }

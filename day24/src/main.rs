@@ -15,9 +15,6 @@ struct Args {
 
     #[arg(long, default_value_t = false)]
     debug: bool,
-
-    #[arg(long, default_value_t = 3)]
-    buckets: u64,
 }
 
 fn main() -> Result<()> {
@@ -33,33 +30,46 @@ fn main() -> Result<()> {
         weights.push(line.parse::<u64>().unwrap());
     }
     let sum: u64 = weights.iter().sum();
-    let bucket_size = sum / args.buckets;
-    println!("Sum: {sum}");
-    assert!(
-        sum == bucket_size * args.buckets,
-        "Bad list, not equalable divisable"
-    );
 
-    let mut candidates = Vec::new();
-    for k in 2..=weights.len() - 2 {
-        for c in weights
-            .iter()
-            .cloned()
-            .combinations(k)
-            .filter(|x| x.iter().sum::<u64>() == bucket_size) // Find all combos which make equal the bucket size
-            .map(|x| (x.len(), x.iter().product::<u64>(), x))
-        // Return length of the vec, quantum entanglement and the vec (technically don't need but debugging..)
-        {
-            candidates.push(c);
+    for b in [(1, 3_u64), (2, 4_u64)] {
+        let bucket_size = sum / b.1;
+        if args.debug {
+            println!("Sum: {sum}");
         }
-    }
-    // Sort it and the top one will be the one for compartment one with least QE
-    candidates.sort();
-    println!("Candidates: {}", candidates.len());
-    println!("1st: {:?}", candidates[0]);
-    if args.debug {
-        for c in &candidates {
-            println!("Candidate: {c:?}");
+        assert!(
+            sum == bucket_size * b.1,
+            "Bad list, not equalable divisable"
+        );
+
+        let mut candidates = Vec::new();
+        for k in 2..=weights.len() - 2 {
+            for c in weights
+                .iter()
+                .copied()
+                .combinations(k)
+                .filter(|x| x.iter().sum::<u64>() == bucket_size) // Find all combos which make equal the bucket size
+                .map(|x| {
+                    if args.debug {
+                        (x.len(), x.iter().product::<u64>(), x)
+                    } else {
+                        (x.len(), x.iter().product::<u64>(), vec![])
+                    }
+                })
+            // Return length of the vec, quantum entanglement and the vec (technically don't need but debugging..)
+            {
+                candidates.push(c);
+            }
+        }
+        // Sort it and the top one will be the one for compartment one with least QE
+        candidates.sort();
+        if args.debug {
+            println!("Candidates: {}", candidates.len());
+        }
+        println!("part{}: 1st: {:?}", b.0, candidates.first().unwrap());
+        if args.debug {
+            for c in &candidates {
+                println!("Candidate: {c:?}");
+            }
         }
     }
     Ok(())

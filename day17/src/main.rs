@@ -28,7 +28,7 @@ fn main() -> Result<()> {
 
     let buckets = lines
         .iter()
-        .map(|l| u64::from_str_radix(l, 10).unwrap())
+        .map(|l| l.parse::<u64>().unwrap())
         .collect::<Vec<_>>();
 
     let mut hm = HashMap::new();
@@ -36,19 +36,19 @@ fn main() -> Result<()> {
         let c = buckets
             .iter()
             .combinations(x)
-            .filter(|x| x.iter().cloned().sum::<u64>() == args.fill)
+            .filter(|x| x.iter().copied().sum::<u64>() == args.fill)
             .count();
         if c > 0 {
             hm.entry(x).and_modify(|x| *x += c).or_insert(c);
         }
     });
-    let sum = hm.iter().map(|(_, v)| *v).sum::<usize>();
+    let sum = hm.values().sum::<usize>();
     println!(
-        "{sum} combinations for {} buckets to fill to {}",
+        "part1: {sum} combinations for {} buckets to fill to {}",
         buckets.len(),
         args.fill
     );
     let min = hm.iter().min().unwrap();
-    println!("min is {} which has {} combos", min.0, min.1);
+    println!("part2: {} combos where min is {}", min.1, min.0);
     Ok(())
 }

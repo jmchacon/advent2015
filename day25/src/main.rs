@@ -24,13 +24,13 @@ fn main() -> Result<()> {
 
     let mut row = 1_u64;
     let mut col = 6_u64;
-    let mut val = 33511524_u64;
-    let mult = 252533_u64;
-    let rem = 33554393_u64;
+    let mut val = 33_511_524_u64;
+    let mult = 252_533_u64;
+    let rem = 33_554_393_u64;
     loop {
         if row == 1 {
             row = col + 1;
-            col = 1
+            col = 1;
         } else {
             row -= 1;
             col += 1;
@@ -40,6 +40,6 @@ fn main() -> Result<()> {
             break;
         }
     }
-    println!("At {},{} - {val}", args.row, args.column);
+    println!("part1: {val} is at {},{}", args.row, args.column);
     Ok(())
 }

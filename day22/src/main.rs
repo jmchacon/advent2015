@@ -1,5 +1,5 @@
 //! day22 advent 2015
-use crate::Effect::*;
+use crate::Effect::{Poison, Recharge, Shield};
 use clap::Parser;
 use color_eyre::eyre::Result;
 use std::{
@@ -113,9 +113,9 @@ fn main() -> Result<()> {
     };
 
     let total = run_battle(&player, &boss, &spells, false, args.debug);
-    println!("Total {total}");
+    println!("part1: Total {total}");
     let hard_total = run_battle(&player, &boss, &spells, true, args.debug);
-    println!("Hard total {hard_total}");
+    println!("part2: Hard total {hard_total}");
     Ok(())
 }
 
@@ -141,29 +141,7 @@ fn run_battle(player: &Stats, boss: &Stats, spells: &Vec<Spell>, hard: bool, deb
             }
         }
 
-        // Run current effects and then reset the hash for spells
-        let mut neweffect = HashMap::new();
-        for (k, v) in &player.effects {
-            let dur = v - 1;
-            // NOTE: Spells always take effect..Then we check duration
-            match k {
-                Shield => {
-                    if dur == 0 {
-                        player.armor -= 7;
-                    }
-                }
-                Poison => {
-                    boss.hp -= 3;
-                }
-                Recharge => {
-                    player.mana += 101;
-                }
-            }
-            if dur > 0 {
-                neweffect.insert(k.clone(), dur);
-            }
-        }
-        player.effects = neweffect;
+        player.effects = run_effects(&mut player, &mut boss);
 
         // If the boss died we're good.
         if boss.hp <= 0 {
@@ -208,28 +186,7 @@ fn run_battle(player: &Stats, boss: &Stats, spells: &Vec<Spell>, hard: bool, deb
                 // At this point the player is done so do the boss
 
                 // Run effects again
-                let mut neweffect = HashMap::new();
-                for (k, v) in &new.effects {
-                    // NOTE: Spells always take effect..Then we check duration
-                    let dur = v - 1;
-                    match k {
-                        Shield => {
-                            if dur == 0 {
-                                new.armor -= 7;
-                            }
-                        }
-                        Poison => {
-                            newboss.hp -= 3;
-                        }
-                        Recharge => {
-                            new.mana += 101;
-                        }
-                    }
-                    if dur > 0 {
-                        neweffect.insert(k.clone(), dur);
-                    }
-                }
-                new.effects = neweffect;
+                new.effects = run_effects(&mut new, &mut newboss);
 
                 // If the boss died we're good.
                 if newboss.hp <= 0 {
@@ -257,4 +214,30 @@ fn run_battle(player: &Stats, boss: &Stats, spells: &Vec<Spell>, hard: bool, deb
         }
     }
     total
+}
+
+fn run_effects(player: &mut Stats, boss: &mut Stats) -> HashMap<Effect, u64> {
+    // Run current effects and then reset the hash for spells
+    let mut neweffects = HashMap::new();
+    for (k, v) in &player.effects {
+        let dur = v - 1;
+        // NOTE: Spells always take effect..Then we check duration
+        match k {
+            Shield => {
+                if dur == 0 {
+                    player.armor -= 7;
+                }
+            }
+            Poison => {
+                boss.hp -= 3;
+            }
+            Recharge => {
+                player.mana += 101;
+            }
+        }
+        if dur > 0 {
+            neweffects.insert(k.clone(), dur);
+        }
+    }
+    neweffects
 }

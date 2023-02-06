@@ -42,53 +42,73 @@ fn main() -> Result<()> {
         let parts = line.split_whitespace().collect::<Vec<_>>();
         assert!(parts.len() == 8, "{} - bad line {line}", line_num + 1);
         assert!(
-            sues.len() == usize::from_str_radix(parts[1].trim_end_matches(":"), 10).unwrap() - 1,
+            sues.len() == parts[1].trim_end_matches(':').parse::<usize>().unwrap() - 1,
             "{} - bad sue {} {line}",
             sues.len(),
             line_num + 1
         );
         let mut sue = Sue::default();
-        for (pos, m) in [parts[2], parts[4], parts[6]].iter().cloned().enumerate() {
+        for (pos, m) in [parts[2], parts[4], parts[6]].iter().copied().enumerate() {
             match m {
                 "children:" => {
-                    sue.children =
-                        u64::from_str_radix(parts[pos * 2 + 3].trim_end_matches(","), 10).unwrap()
+                    sue.children = parts[pos * 2 + 3]
+                        .trim_end_matches(',')
+                        .parse::<_>()
+                        .unwrap();
                 }
                 "cats:" => {
-                    sue.cats =
-                        u64::from_str_radix(parts[pos * 2 + 3].trim_end_matches(","), 10).unwrap()
+                    sue.cats = parts[pos * 2 + 3]
+                        .trim_end_matches(',')
+                        .parse::<_>()
+                        .unwrap();
                 }
                 "samoyeds:" => {
-                    sue.samoyeds =
-                        u64::from_str_radix(parts[pos * 2 + 3].trim_end_matches(","), 10).unwrap()
+                    sue.samoyeds = parts[pos * 2 + 3]
+                        .trim_end_matches(',')
+                        .parse::<_>()
+                        .unwrap();
                 }
                 "pomeranians:" => {
-                    sue.pomeranians =
-                        u64::from_str_radix(parts[pos * 2 + 3].trim_end_matches(","), 10).unwrap()
+                    sue.pomeranians = parts[pos * 2 + 3]
+                        .trim_end_matches(',')
+                        .parse::<_>()
+                        .unwrap();
                 }
                 "akitas:" => {
-                    sue.akitas =
-                        u64::from_str_radix(parts[pos * 2 + 3].trim_end_matches(","), 10).unwrap()
+                    sue.akitas = parts[pos * 2 + 3]
+                        .trim_end_matches(',')
+                        .parse::<_>()
+                        .unwrap();
                 }
                 "vizslas:" => {
-                    sue.vizslas =
-                        u64::from_str_radix(parts[pos * 2 + 3].trim_end_matches(","), 10).unwrap()
+                    sue.vizslas = parts[pos * 2 + 3]
+                        .trim_end_matches(',')
+                        .parse::<_>()
+                        .unwrap();
                 }
                 "goldfish:" => {
-                    sue.goldfish =
-                        u64::from_str_radix(parts[pos * 2 + 3].trim_end_matches(","), 10).unwrap()
+                    sue.goldfish = parts[pos * 2 + 3]
+                        .trim_end_matches(',')
+                        .parse::<_>()
+                        .unwrap();
                 }
                 "trees:" => {
-                    sue.trees =
-                        u64::from_str_radix(parts[pos * 2 + 3].trim_end_matches(","), 10).unwrap()
+                    sue.trees = parts[pos * 2 + 3]
+                        .trim_end_matches(',')
+                        .parse::<_>()
+                        .unwrap();
                 }
                 "cars:" => {
-                    sue.cars =
-                        u64::from_str_radix(parts[pos * 2 + 3].trim_end_matches(","), 10).unwrap()
+                    sue.cars = parts[pos * 2 + 3]
+                        .trim_end_matches(',')
+                        .parse::<_>()
+                        .unwrap();
                 }
                 "perfumes:" => {
-                    sue.perfumes =
-                        u64::from_str_radix(parts[pos * 2 + 3].trim_end_matches(","), 10).unwrap()
+                    sue.perfumes = parts[pos * 2 + 3]
+                        .trim_end_matches(',')
+                        .parse::<_>()
+                        .unwrap();
                 }
                 _ => panic!("{} - bad line {m} - {line}", line_num + 1),
             }
@@ -112,12 +132,12 @@ fn main() -> Result<()> {
         perfumes: 1,
     };
 
-    println!("best sue: {}", best_sue(&sues, &m, true));
-    println!("best sue2: {}", best_sue(&sues, &m, false));
+    println!("part1: best sue: {}", best_sue(&sues, &m, true));
+    println!("part2: best sue: {}", best_sue(&sues, &m, false));
     Ok(())
 }
 
-fn best_sue(sues: &Vec<Sue>, m: &Sue, exact: bool) -> usize {
+fn best_sue(sues: &[Sue], m: &Sue, exact: bool) -> usize {
     // Turn these into arrays so we can iterate to compare vs field compare.
     let comp = [
         m.children,
@@ -157,12 +177,10 @@ fn best_sue(sues: &Vec<Sue>, m: &Sue, exact: bool) -> usize {
             comp.iter().eq_by(s.iter().enumerate(), |x, y| {
                 if exact || (y.0 != 1 && y.0 != 3 && y.0 != 6 && y.0 != 7) {
                     *x == *y.1 || *y.1 == 0
+                } else if y.0 == 1 || y.0 == 7 {
+                    *y.1 > *x || *y.1 == 0
                 } else {
-                    if y.0 == 1 || y.0 == 7 {
-                        *y.1 > *x || *y.1 == 0
-                    } else {
-                        *y.1 < *x || *y.1 == 0
-                    }
+                    *y.1 < *x || *y.1 == 0
                 }
             })
         })
