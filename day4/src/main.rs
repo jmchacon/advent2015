@@ -28,13 +28,13 @@ fn main() -> Result<()> {
             match format!("{digest:x}").as_bytes() {
                 [b'0', b'0', b'0', b'0', b'0', b'0', ..] => {
                     if !found_6 {
-                        println!("Found 6 at {i} - {line}");
+                        println!("part2: Found 6 at {i} - {line}");
                         found_6 = true;
                     }
                 }
                 [b'0', b'0', b'0', b'0', b'0', ..] => {
                     if !found_5 {
-                        println!("Found 5 at {i} - {line}");
+                        println!("part1: Found 5 at {i} - {line}");
                         found_5 = true;
                     }
                 }
