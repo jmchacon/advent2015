@@ -13,6 +13,9 @@ struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
 
+    #[arg(long, default_value_t = false)]
+    debug: bool,
+
     #[arg(long, default_value_t = 2503)]
     race: u64,
 }
@@ -39,9 +42,9 @@ fn main() -> Result<()> {
         deer.insert(
             parts[0],
             Reindeer {
-                fly_speed: u64::from_str_radix(parts[3], 10).unwrap(),
-                fly_time: u64::from_str_radix(parts[6], 10).unwrap(),
-                rest: u64::from_str_radix(parts[13], 10).unwrap(),
+                fly_speed: parts[3].parse::<u64>().unwrap(),
+                fly_time: parts[6].parse::<u64>().unwrap(),
+                rest: parts[13].parse::<u64>().unwrap(),
             },
         );
     }
@@ -50,29 +53,37 @@ fn main() -> Result<()> {
     for (d, r) in &deer {
         speeds.push((dist_time(r, args.race), *d));
     }
-    speeds.sort();
-    for s in &speeds {
-        println!("{} flies {} in {} seconds", s.1, s.0, args.race);
+    speeds.sort_unstable();
+    if args.debug {
+        for s in &speeds {
+            println!("{} flies {} in {} seconds", s.1, s.0, args.race);
+        }
+
+        println!();
     }
-
-    println!();
-
+    let winner = speeds.last().unwrap();
+    println!("part1: Winner is {} who flew {}", winner.1, winner.0);
     let mut scores = HashMap::new();
     for time in 1..=args.race {
         let mut speeds = Vec::new();
         for (d, r) in &deer {
             speeds.push((dist_time(r, time), *d));
         }
-        speeds.sort();
+        speeds.sort_unstable();
         let (_, winner) = speeds[speeds.len() - 1];
         scores.entry(winner).and_modify(|x| *x += 1).or_insert(1);
     }
     // Now flip them so we can sort it.
     let mut s = scores.iter().map(|(k, v)| (*v, *k)).collect::<Vec<_>>();
-    s.sort();
-    for (s, r) in &s {
-        println!("{r} has {s} score in {} seconds", args.race);
+    s.sort_unstable();
+
+    if args.debug {
+        for (s, r) in &s {
+            println!("{r} has {s} score in {} seconds", args.race);
+        }
     }
+    let winner = s.last().unwrap();
+    println!("part2: Winner is {} who flex {}", winner.1, winner.0);
     Ok(())
 }
 
