@@ -12,6 +12,9 @@ use std::{io, iter};
 struct Args {
     #[arg(long, default_value_t = String::from("input.txt"))]
     filename: String,
+
+    #[arg(long, default_value_t = false)]
+    debug: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -37,23 +40,25 @@ fn main() -> Result<()> {
         let parts = line.split_whitespace().collect::<Vec<_>>();
         assert!(parts.len() == 11, "{} bad line - {line}", line_num + 1);
         ingrediants.push(Ingrediant {
-            _name: parts[0].trim_end_matches(":"),
-            capacity: i64::from_str_radix(parts[2].trim_end_matches(","), 10).unwrap(),
-            durability: i64::from_str_radix(parts[4].trim_end_matches(","), 10).unwrap(),
-            flavor: i64::from_str_radix(parts[6].trim_end_matches(","), 10).unwrap(),
-            texture: i64::from_str_radix(parts[8].trim_end_matches(","), 10).unwrap(),
-            calories: i64::from_str_radix(parts[10].trim_end_matches(","), 10).unwrap(),
+            _name: parts[0].trim_end_matches(':'),
+            capacity: parts[2].trim_end_matches(',').parse::<_>().unwrap(),
+            durability: parts[4].trim_end_matches(',').parse::<_>().unwrap(),
+            flavor: parts[6].trim_end_matches(',').parse::<_>().unwrap(),
+            texture: parts[8].trim_end_matches(',').parse::<_>().unwrap(),
+            calories: parts[10].trim_end_matches(',').parse::<_>().unwrap(),
         });
     }
 
-    for i in &ingrediants {
-        println!("{i:?}");
+    if args.debug {
+        for i in &ingrediants {
+            println!("{i:?}");
+        }
     }
 
     let mut best = i64::MIN;
     let mut best_with_500_cal = i64::MIN;
 
-    for j in (1..100 as i64)
+    for j in (1..100_i64)
         .permutations(ingrediants.len())
         .filter(|x| x.iter().sum::<i64>() == 100)
         .chain(iter::once(vec![
@@ -81,8 +86,8 @@ fn main() -> Result<()> {
             best_with_500_cal = tot;
         }
     }
-    println!("best is {best}");
-    println!("best with 500 cal is {best_with_500_cal}");
+    println!("part1: best is {best}");
+    println!("part2: best with 500 cal is {best_with_500_cal}");
     Ok(())
 }
 
