@@ -57,14 +57,12 @@ fn main() -> Result<()> {
 
     let mut best = i64::MIN;
     let mut best_with_500_cal = i64::MIN;
+    let l: i64 = ingrediants.len().try_into()?;
 
     for j in (1..100_i64)
         .permutations(ingrediants.len())
         .filter(|x| x.iter().sum::<i64>() == 100)
-        .chain(iter::once(vec![
-            100 / ingrediants.len() as i64;
-            ingrediants.len()
-        ]))
+        .chain(iter::once(vec![100 / l; ingrediants.len()]))
     {
         let (mut c, mut d, mut f, mut t, mut cal) = (0, 0, 0, 0, 0);
         for (pos, x) in j.iter().enumerate() {
