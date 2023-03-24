@@ -84,21 +84,21 @@ fn main() -> Result<()> {
         }
     }
 
-    run(&instructions, &mut regs);
+    run(&instructions, &mut regs)?;
     println!("part1: A: {} B: {}", regs[0], regs[1]);
 
     regs[0] = 1;
     regs[1] = 0;
-    run(&instructions, &mut regs);
+    run(&instructions, &mut regs)?;
     println!("part2: A: {} B: {}", regs[0], regs[1]);
     Ok(())
 }
 
-fn run(instructions: &Vec<Instruction>, regs: &mut [u64; 2]) {
-    let mut idx = 0;
+fn run(instructions: &Vec<Instruction>, regs: &mut [u64; 2]) -> Result<()> {
+    let mut idx = 0_isize;
     loop {
-        #[allow(clippy::cast_sign_loss)]
-        match &instructions[idx as usize] {
+        let i: usize = idx.try_into()?;
+        match &instructions[i] {
             Hlf(r) => {
                 regs[*r] /= 2;
                 idx += 1;
@@ -129,11 +129,11 @@ fn run(instructions: &Vec<Instruction>, regs: &mut [u64; 2]) {
                 }
             }
         };
-        #[allow(clippy::cast_possible_wrap)]
-        if idx < 0 || idx >= instructions.len() as isize {
+        if idx < 0 || idx >= instructions.len().try_into()? {
             break;
         }
     }
+    Ok(())
 }
 
 fn reg(p: &str, line: &str, line_num: usize) -> usize {
