@@ -21,6 +21,7 @@ fn main() -> Result<()> {
     let file = File::open(filename)?;
     let lines: Vec<String> = io::BufReader::new(file).lines().flatten().collect();
 
+    let mut part2 = 0;
     for (line_num, line) in lines.iter().enumerate() {
         let mut floor = 0;
         let mut found = false;
@@ -42,10 +43,11 @@ fn main() -> Result<()> {
             }
             if !found && floor == -1 {
                 found = true;
-                println!("part2: {} first floor -1 pos", pos + 1);
+                part2 = pos + 1;
             }
         }
         println!("part1: Ended on {floor}");
+        println!("part2: {} first floor -1 pos", part2);
     }
 
     Ok(())
