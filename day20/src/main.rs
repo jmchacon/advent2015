@@ -56,7 +56,7 @@ fn main() -> Result<()> {
             done1 = true;
         }
         if sum2 >= args.input && !done2 {
-            println!("part2: {start} => {sum}");
+            println!("part2: {start} -> {sum}");
             done2 = true;
         }
         if done1 && done2 {
