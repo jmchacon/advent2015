@@ -30,7 +30,7 @@ fn main() -> Result<()> {
     for (line_num, line) in lines.iter().enumerate() {
         let parts = line.split_whitespace().collect::<Vec<&str>>();
         assert!(parts.len() == 11, "{} - bad line {line}", line_num + 1);
-        let mut happiness = parts[3].parse::<i64>().unwrap();
+        let mut happiness = parts[3].parse::<i64>()?;
         if parts[2] == "lose" {
             happiness *= -1;
         } else {

@@ -59,7 +59,7 @@ fn main() -> Result<()> {
             line_num + 1
         );
 
-        parse_line(&parts, &mut hm, &mut vals, line, line_num);
+        parse_line(&parts, &mut hm, &mut vals, line, line_num)?;
     }
     if args.debug {
         println!("hm:");
@@ -149,7 +149,7 @@ fn parse_line(
     vals: &mut HashMap<String, u16>,
     line: &str,
     line_num: usize,
-) {
+) -> Result<()> {
     match parts.len() {
         3 => {
             if let Ok(v) = parts[0].parse::<u16>() {
@@ -203,14 +203,14 @@ fn parse_line(
                     };
                 }
                 "LSHIFT" => {
-                    let v = parts[2].parse::<u16>().unwrap();
+                    let v = parts[2].parse::<u16>()?;
                     op = Operation {
                         operator: Operator::Lshift(v),
                         dest: String::from(parts[4]),
                     };
                 }
                 "RSHIFT" => {
-                    let v = parts[2].parse::<u16>().unwrap();
+                    let v = parts[2].parse::<u16>()?;
                     op = Operation {
                         operator: Operator::Rshift(v),
                         dest: String::from(parts[4]),
@@ -228,4 +228,5 @@ fn parse_line(
             panic!("{} - bad line {line}", line_num + 1);
         }
     }
+    Ok(())
 }

@@ -27,7 +27,7 @@ fn main() -> Result<()> {
 
     let mut weights = Vec::new();
     for line in &lines {
-        weights.push(line.parse::<u64>().unwrap());
+        weights.push(line.parse::<u64>()?);
     }
     let sum: u64 = weights.iter().sum();
 

@@ -31,7 +31,7 @@ fn main() -> Result<()> {
     for (line_num, line) in lines.iter().enumerate() {
         let parts: Vec<&str> = line.split_whitespace().collect();
         assert!(parts.len() == 5, "{} - bad line {line}", line_num + 1);
-        let val = parts[4].parse::<usize>().unwrap();
+        let val = parts[4].parse::<usize>()?;
         let key = String::from(parts[0]);
         let second = String::from(parts[2]);
         if !hm.contains_key(&key) {

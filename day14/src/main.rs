@@ -42,9 +42,9 @@ fn main() -> Result<()> {
         deer.insert(
             parts[0],
             Reindeer {
-                fly_speed: parts[3].parse::<u64>().unwrap(),
-                fly_time: parts[6].parse::<u64>().unwrap(),
-                rest: parts[13].parse::<u64>().unwrap(),
+                fly_speed: parts[3].parse::<u64>()?,
+                fly_time: parts[6].parse::<u64>()?,
+                rest: parts[13].parse::<u64>()?,
             },
         );
     }

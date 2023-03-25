@@ -51,64 +51,34 @@ fn main() -> Result<()> {
         for (pos, m) in [parts[2], parts[4], parts[6]].iter().copied().enumerate() {
             match m {
                 "children:" => {
-                    sue.children = parts[pos * 2 + 3]
-                        .trim_end_matches(',')
-                        .parse::<_>()
-                        .unwrap();
+                    sue.children = parts[pos * 2 + 3].trim_end_matches(',').parse::<_>()?;
                 }
                 "cats:" => {
-                    sue.cats = parts[pos * 2 + 3]
-                        .trim_end_matches(',')
-                        .parse::<_>()
-                        .unwrap();
+                    sue.cats = parts[pos * 2 + 3].trim_end_matches(',').parse::<_>()?;
                 }
                 "samoyeds:" => {
-                    sue.samoyeds = parts[pos * 2 + 3]
-                        .trim_end_matches(',')
-                        .parse::<_>()
-                        .unwrap();
+                    sue.samoyeds = parts[pos * 2 + 3].trim_end_matches(',').parse::<_>()?;
                 }
                 "pomeranians:" => {
-                    sue.pomeranians = parts[pos * 2 + 3]
-                        .trim_end_matches(',')
-                        .parse::<_>()
-                        .unwrap();
+                    sue.pomeranians = parts[pos * 2 + 3].trim_end_matches(',').parse::<_>()?;
                 }
                 "akitas:" => {
-                    sue.akitas = parts[pos * 2 + 3]
-                        .trim_end_matches(',')
-                        .parse::<_>()
-                        .unwrap();
+                    sue.akitas = parts[pos * 2 + 3].trim_end_matches(',').parse::<_>()?;
                 }
                 "vizslas:" => {
-                    sue.vizslas = parts[pos * 2 + 3]
-                        .trim_end_matches(',')
-                        .parse::<_>()
-                        .unwrap();
+                    sue.vizslas = parts[pos * 2 + 3].trim_end_matches(',').parse::<_>()?;
                 }
                 "goldfish:" => {
-                    sue.goldfish = parts[pos * 2 + 3]
-                        .trim_end_matches(',')
-                        .parse::<_>()
-                        .unwrap();
+                    sue.goldfish = parts[pos * 2 + 3].trim_end_matches(',').parse::<_>()?;
                 }
                 "trees:" => {
-                    sue.trees = parts[pos * 2 + 3]
-                        .trim_end_matches(',')
-                        .parse::<_>()
-                        .unwrap();
+                    sue.trees = parts[pos * 2 + 3].trim_end_matches(',').parse::<_>()?;
                 }
                 "cars:" => {
-                    sue.cars = parts[pos * 2 + 3]
-                        .trim_end_matches(',')
-                        .parse::<_>()
-                        .unwrap();
+                    sue.cars = parts[pos * 2 + 3].trim_end_matches(',').parse::<_>()?;
                 }
                 "perfumes:" => {
-                    sue.perfumes = parts[pos * 2 + 3]
-                        .trim_end_matches(',')
-                        .parse::<_>()
-                        .unwrap();
+                    sue.perfumes = parts[pos * 2 + 3].trim_end_matches(',').parse::<_>()?;
                 }
                 _ => panic!("{} - bad line {m} - {line}", line_num + 1),
             }

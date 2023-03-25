@@ -57,21 +57,15 @@ fn main() -> Result<()> {
             }
             "jmp" => {
                 assert!(parts.len() == 2, "{} - bad line {line}", line_num + 1);
-                Jmp(parts[1].parse::<_>().unwrap())
+                Jmp(parts[1].parse::<_>()?)
             }
             "jie" => {
                 assert!(parts.len() == 3, "{} - bad line {line}", line_num + 1);
-                Jie(
-                    reg(parts[1], line, line_num),
-                    parts[2].parse::<_>().unwrap(),
-                )
+                Jie(reg(parts[1], line, line_num), parts[2].parse::<_>()?)
             }
             "jio" => {
                 assert!(parts.len() == 3, "{} - bad line {line}", line_num + 1);
-                Jio(
-                    reg(parts[1], line, line_num),
-                    parts[2].parse::<_>().unwrap(),
-                )
+                Jio(reg(parts[1], line, line_num), parts[2].parse::<_>()?)
             }
             _ => panic!("{} - bad line {line}", line_num + 1),
         };

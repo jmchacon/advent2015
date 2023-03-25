@@ -62,8 +62,8 @@ fn main() -> Result<()> {
                         pos += 1;
                         // Need 2 chars here
                         assert!(pos < last - 1, "{} - bad line {line}", line_num + 1);
-                        let _ = u8::from_str_radix(str::from_utf8(&raw[pos..pos + 2]).unwrap(), 16)
-                            .unwrap();
+                        // Assert it's proper hex
+                        let _ = u8::from_str_radix(str::from_utf8(&raw[pos..pos + 2])?, 16)?;
                         pos += 2;
                         local_chars += 1;
                     }

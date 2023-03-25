@@ -26,9 +26,9 @@ fn main() -> Result<()> {
     for (line_num, line) in lines.iter().enumerate() {
         let parts: Vec<&str> = line.split('x').collect();
         assert!(parts.len() == 3, "{} - bad line {line}", line_num + 1);
-        let l = parts[0].parse::<u32>().unwrap();
-        let w = parts[1].parse::<u32>().unwrap();
-        let h = parts[2].parse::<u32>().unwrap();
+        let l = parts[0].parse::<u32>()?;
+        let w = parts[1].parse::<u32>()?;
+        let h = parts[2].parse::<u32>()?;
         let areas = vec![l * w, w * h, h * l];
         total += areas.iter().map(|a| 2 * a).sum::<u32>();
         total += areas.iter().min().unwrap();

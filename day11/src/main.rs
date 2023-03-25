@@ -10,9 +10,9 @@ struct Args {
     #[arg(long, default_value_t = String::from("cqjxjnds"))]
     input: String,
 
-     #[arg(long, default_value_t = false)]
+    #[arg(long, default_value_t = false)]
     debug: bool,
-    
+
     #[arg(long, default_value_t = usize::MAX)]
     iterations: usize,
 }
@@ -31,31 +31,19 @@ fn main() -> Result<()> {
             break;
         }
         if args.debug {
-            // SAFETY: We know this is valid utf8 ascii as we just converted it
-            // or finished.
-            unsafe {
-                println!("{}", std::str::from_utf8(pass).unwrap_unchecked());
-            }
+            println!("{}", std::str::from_utf8(pass)?);
         }
         for i in 0..args.iterations {
             increment(pass);
             if args.debug {
-                // SAFETY: We know this is valid utf8 ascii so increment will
-                //         still leave it in a state we can blind convert.
-                unsafe {
-                    println!("{}", std::str::from_utf8(pass).unwrap_unchecked());
-                }
+                println!("{}", std::str::from_utf8(pass)?);
             }
             if test1(pass) && test2(pass) && test3(pass) {
                 // SAFETY: We know this is valid utf8 ascii so increment will
                 //         still leave it in a state we can blind convert.
-                unsafe {
-                    println!(
-                        "part{part}: {}",
-                        std::str::from_utf8(pass).unwrap_unchecked()
-                    );
-                    part += 1;
-                }
+                println!("part{part}: {}", std::str::from_utf8(pass)?);
+                part += 1;
+
                 if args.debug {
                     println!("Found in {i} iterations");
                 }

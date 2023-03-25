@@ -81,10 +81,10 @@ fn main() -> Result<()> {
             line_num + 1
         );
 
-        x1 = xs[0].parse::<usize>().unwrap();
-        y1 = xs[1].parse::<usize>().unwrap();
-        x2 = ys[0].parse::<usize>().unwrap();
-        y2 = ys[1].parse::<usize>().unwrap();
+        x1 = xs[0].parse::<usize>()?;
+        y1 = xs[1].parse::<usize>()?;
+        x2 = ys[0].parse::<usize>()?;
+        y2 = ys[1].parse::<usize>()?;
         if args.debug {
             println!("{x1},{x2} -> {y1},{y2}");
         }

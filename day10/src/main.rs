@@ -36,13 +36,13 @@ fn main() -> Result<()> {
                     continue;
                 }
                 cc[0] = prev;
-                let x = str::from_utf8(&cc).unwrap();
+                let x = str::from_utf8(&cc)?;
                 new += &format!("{repeat}{x}");
                 prev = *c;
                 repeat = 1;
             }
             cc[0] = prev;
-            let x = str::from_utf8(&cc).unwrap();
+            let x = str::from_utf8(&cc)?;
             new += &format!("{repeat}{x}");
             if args.debug {
                 println!("{i} - {cur} -> {new}");
