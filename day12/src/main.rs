@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     let mut num2 = 0;
     for (line_num, line) in lines.iter().enumerate() {
         let Ok(v) = serde_json::from_str::<Value>(line) else {
-            panic!("{} - bad line {line}", line_num+1);
+            panic!("{} - bad line {line}", line_num + 1);
         };
 
         num += total(&v, false);
