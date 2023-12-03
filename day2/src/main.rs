@@ -29,11 +29,11 @@ fn main() -> Result<()> {
         let l = parts[0].parse::<u32>()?;
         let w = parts[1].parse::<u32>()?;
         let h = parts[2].parse::<u32>()?;
-        let areas = vec![l * w, w * h, h * l];
+        let areas = [l * w, w * h, h * l];
         total += areas.iter().map(|a| 2 * a).sum::<u32>();
         total += areas.iter().min().unwrap();
 
-        let perimeters = vec![2 * w + 2 * h, 2 * l + 2 * h, 2 * w + 2 * l];
+        let perimeters = [2 * w + 2 * h, 2 * l + 2 * h, 2 * w + 2 * l];
         let vol = l * w * h;
         ribbon += perimeters.iter().min().unwrap() + vol;
     }

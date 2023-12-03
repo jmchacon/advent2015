@@ -26,7 +26,7 @@ fn main() -> Result<()> {
                 println!("{i} - {cur}");
             }
             let mut new = String::new();
-            let bytes = cur.as_str().as_bytes();
+            let bytes = cur.as_bytes();
             let mut prev = bytes[0];
             let mut repeat = 1;
             let mut cc: [u8; 1] = [0];

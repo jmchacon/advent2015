@@ -47,7 +47,7 @@ fn main() -> Result<()> {
             }
         }
         println!("part1: Ended on {floor}");
-        println!("part2: {} first floor -1 pos", part2);
+        println!("part2: {part2} first floor -1 pos");
     }
 
     Ok(())

@@ -39,7 +39,7 @@ fn main() -> Result<()> {
     let mut grid = Grid::<Light>::new(lines[0].len(), lines.len());
     for (line_num, line) in lines.iter().enumerate() {
         for (pos, b) in line.as_bytes().iter().enumerate() {
-            let l = Location(pos, line_num);
+            let l = Location(pos.try_into().unwrap(), line_num.try_into().unwrap());
             match b {
                 b'#' => grid.add(&l, Light::On),
                 b'.' => {}
@@ -89,18 +89,33 @@ fn step(grid: &mut Grid<Light>, corners: bool) {
     // force the corners to remain.
     if corners {
         grid.add(&Location(0, 0), Light::On);
-        grid.add(&Location(grid.width() - 1, 0), Light::On);
-        grid.add(&Location(0, grid.height() - 1), Light::On);
-        grid.add(&Location(grid.width() - 1, grid.height() - 1), Light::On);
+        grid.add(
+            &Location((grid.width() - 1).try_into().unwrap(), 0),
+            Light::On,
+        );
+        grid.add(
+            &Location(0, (grid.height() - 1).try_into().unwrap()),
+            Light::On,
+        );
+        grid.add(
+            &Location(
+                (grid.width() - 1).try_into().unwrap(),
+                (grid.height() - 1).try_into().unwrap(),
+            ),
+            Light::On,
+        );
     }
     for gr in grid.iter() {
         let l = gr.0;
         let mut g = gr.1.clone();
         if corners
             && (l == Location(0, 0)
-                || l == Location(grid.width() - 1, 0)
-                || l == Location(0, grid.height() - 1)
-                || l == Location(grid.width() - 1, grid.height() - 1))
+                || l == Location((grid.width() - 1).try_into().unwrap(), 0)
+                || l == Location(0, (grid.height() - 1).try_into().unwrap())
+                || l == Location(
+                    (grid.width() - 1).try_into().unwrap(),
+                    (grid.height() - 1).try_into().unwrap(),
+                ))
         {
             g = Light::On;
         } else {
